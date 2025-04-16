@@ -1,0 +1,4 @@
+Portal:
+    Dois tipois de câmera -> Do portal e do Jogador
+    Colisão com os portais e com a parede
+    Jogo simples
