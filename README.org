@@ -1,157 +1,25 @@
 #+STARTUP: content
 #+STARTUP: overview
 #+STARTUP: indent
-#+TITLE: How to install Quartus II for Linux
-#+AUTHOR: Rayan Raddatz de Matos
+#+TITLE: Final project for 'Computer Graphics Fundamentos' course
+#+AUTHOR: Rayan Raddatz de Matos, Gabriel Henrique Fiszczuk Brandeburski
 
-#+begin_quote
-[!NOTE]
-- This tutorial is made for linux distributions based on Debian.
-- This git repository is based and inspired on https://github.com/baioc/quartus-linux.
-#+end_quote
+** Table of "Must Do"
+| Functionality                | Note                                                                                                                                                                    | Done? |
+|------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------|
+| Real-time interaction        | Game must not be "slow"                                                                                                                                                 | NO    |
+| Non-trivial logic            | --                                                                                                                                                                      | NO    |
+| Use of matrices              | We can't use library to do matrice calculations                                                                                                                         | NO    |
+| User interaction             | --                                                                                                                                                                      | NO    |
+| Complex polygonal mesh       | At least an model more complex then cow.obj                                                                                                                             | NO    |
+| Geometric transformations    | Control transformations with mouse and/or keyboard (not only the camera)                                                                                                | NO    |
+| Virtual camera control       | At least two cameras (ex. look-at camera and free camera)                                                                                                               | NO    |
+| Instances of virtual objects | At least one object must be copied with two or more instances                                                                                                           | NO    |
+| Intersection test            | At least three types of intersection test (ex. cube-cube, cube-plan and point-sphere). Must be in a separeted file called collisions.cpp                                | NO    |
+| Illumination models          | At least some objects with Blinn-Phong and difuse (Lambert) illumination model and also at least one object with Gouraud and Phong interpolarion model for illumination | NO    |
+| Textures                     | All objects must have collors defined with textures represented by images (at least 3 differente images)                                                                | NO    |
+| Bézier splines               | At least one virtual object with movimentation defined with Bézier splines                                                                                              | NO    |
+| Time-based moviments         | All objects moviments must be computed based in time (independent from CPU)                                                                                             | NO    |
 
-
-** Getting the needed files
-You can download the Quartus II from [[https://www.intel.com/content/www/us/en/software-kit/666220/intel-quartus-ii-web-edition-design-software-version-13-1-for-linux.html][this link]]. In this tutorial I
-will use the full download with devices support included, if you don't need the
-devices you can download just the Quartus II Setup from the
-/Individual Files/ tab, but notice that the devices are needed to create
-projects.
-
-** Installation Script
-The [[./quartus_installer.sh]] and the [[./quartus_env.sh]] files in this
-repository can be used to download and install the Quartus II 
-software and it's required libraries. You can clone this 
-repository in the same directory where you downloaded the
-~Quartus-web-13.1.0.162-linux.tar~ archive, set the enviroment variables using
-the ~quartus_env.sh~ with the source command and after run the
-~quartus_installer.sh~ with sudo (required to install the libraries):
-#+begin_src shell :results output :exports both
-git clone https://github.com/rddtz/quartus-for-linux.git
-cd quartus-for-linux
-source ./quartus_env.sh
-sudo ./quartus_installer.sh
-#+end_src
-
-#+begin_quote
-[!IMPORTANT]
-This process should be enough to install and open the quartus, but is
-important to keep in mind that some errors can occour inside the
-Quartus II application and also is important to set the enviroment
-variables everytime you run the applications. This said, I highly
-reccomend you to read the section named *[[https://github.com/rddtz/quartus-for-linux#enviroment-variables-and-library-erros][Enviroment Variables and Library Errors]]*.
-#+end_quote
-
-** Installing the Quartus II
-After downloading the Quartus, you will depare with the
-~Quartus-web-13.1.0.162-linux.tar~ file. You will need to extract the
-files from the .tar archive, you can use the following command to do this:
-
-#+begin_src shell :results output :exports both
-tar -xf Quartus-web-13.1.0.162-linux.tar
-ls
-#+end_src
-
-#+RESULTS:
-: components  Quartus-web-13.1.0.162-linux.tar  setup.sh
-
-After this you will just need to enter the components directory and execute the
-~QuartusSetupWeb-13.1.0.162.run~ file:
-
-#+begin_src shell :results output :exports both
-cd components
-./QuartusSetupWeb-13.1.0.162.run
-#+end_src
-
-Then the setup wizard will start, it's important that you don't change
-the default installation directory, who should be something like:
-~/home/$(your_user)/altera/13.1~, after clicking next you will need to
-select the devices that you want to install, you can ignore this and
-just continue clicking next until the installation start.
-
-** Enviroment Variables and Library Erros
-After installing, you will see that (probably) some error will
-occour. This errors happen because some of the libraries used by the Quartus
-II are not installed or have been removed from the distribuition archives of most of the
-debian base distros and also because the Quartus depends on some
-enviroment varibales that are not set by default.
-
-*** Setting the require enviroment variables
-This problem is the easiest to solve since you just need to set some
-env variables needed by the Quartus II. You can run the
-[[./quartus_env.sh]] script as show below to set the enviroment variables:
-
-#+begin_src shell :results output :exports both
-source ./quartus_env.sh
-#+end_src
-The source commands is needed to run the script in the current shell
-enviroment, it can alse be run as:
-#+begin_src shell :results output :exports both
-. ./quartus_env.sh
-#+end_src
-
-#+begin_quote
-[!IMPORTANT]
-It's needed to set the enviroment variables everytime that you start a new shell to run the Quartus, you can achieve this by running the script when starting a new sheel, setting the command above to run in your bash configuration file or setting a cron job.
-#+end_quote
-
-*** Error while loading libpng12 before opening the Quartus II GUI
-After setting the enviroment variables, you can try to run the
-Quartus II with th ~quartus~ command. If you are faced with a
-/error while loading shared libraries/ error for the libpng12.so.0
-library and try to install this package, you will see that the
-package manager can't find the libpng12 library. This happen because
-the libpng12 are not in the distribuitions archives anymore, in order
-to fix this problem you will need to install from the web, I used the
-~libpng12-0_1.2.54-6_amd64.deb~ found in [[https://snapshot.debian.org/package/libpng/1.2.54-6/#libpng12-0_1.2.54-6][this link]]. After downloading
-the file i renamed it and installed using the ~apt~ package manager:
-#+begin_src shell :results output :exports both
-mv ./e152c9ad6e464ec325d6c8dd1d0f2dae06ebb6d9 ./libpng.deb
-sudo apt install ./libpng.deb
-#+end_src
-After this you should be able to open the Quartus II GUI by using the
-~quartus~ command in your terminal.
-
-*** University Program VWF missing libraries and wrong ModelSim path errors
-After running the Quartus II software, you may also face some others
-library missing errors or other kind of errors. The first error you
-can face when trying to run a Waveform Simulation are caused by
-not founding the ModelSim executable directory, to solve this problem
-you will need check the top menu and follow this path *Tools > Options
-> EDA Tool Options* and adding a extra "/" at the end of the
-ModelSim-A... path, this should solve the first problem.
-
-
-The second problem that may appear while trying to run a Waveform
-Simulation are that some libraries may not be found. In my case, I
-need to install the ~libxft2~, ~libxft2:i386~, ~lib32ncurses5~, ~libxext6~,
-~libxext6:i386~, ~lib32ncurses6,~ ~libxft2:i386,~ ~libncurses5:i386~ and
-~libncurses5~ libraries in order to the simulation work properly, you
-can run the following command to install all the libraries:
-
-#+begin_src shell :results output :exports both
-sudo apt install libxft2 libxft2:i386 lib32ncurses5 libxext6 libxext6:i386 lib32ncurses6 libxft2:i386 libncurses5:i386 libncurses5 -y
-#+end_src
-
-After this tou should be able to run the Waveform Simulation without
-problems.
-
-*** "Compilation" process for block diagrams/schematic stuck or taking too long
-
-The last problem that I faced was that my compilation process was
-stuck in 26%, it occoured because of the the fitter and is a easy
-problem to solve, everything you need to do is check the top menu and
-go into *Assignments > Settings > Fitter Settings* and change the
-Fitter effort from /Auto Fit/ to /Fast Fit/. If this don't solve the
-problem, you will need to go back to the Fitter Settings and uncheck
-the /Optimize hold timing/ and /Optimize multi-corner timing/ in the
-Timing-driven compilation section.
-
-------
-#+begin_quote
-[!TIP]
-If an error that you face don't appear here, i recommend to take a
-look at this [[https://github.com/baioc/quartus-linux][git repository]], it contains some extra informations.
-Feel free to contact me if needed and contribute to this
-repository with your tips or errors solved.
-#+end_quote
+You can do extra functionalities if it is related to the course
+contents.
