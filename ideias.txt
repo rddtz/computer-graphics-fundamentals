@@ -1,4 +1,15 @@
 Portal:
-    Dois tipois de câmera -> Do portal e do Jogador
+    Interação -> com o mouse (olhar ao redor e clicar para lançar os portais) e teclado (movimentar o jogador e possivelmente interagir com objetos)
+
+    Transformações geométricas -> pegar objetos, transladando-os
+
+    Dois tipois de câmera -> 
+        Do portal (look-at?) : (mostrando o que o outro portal consegue observar) 
+        Livre : Do Jogador
+
+    Movimentação com curvas de Bézier -> plataformas flutuantes, que vão e voltam em um caminho pré-determinado 
+
     Colisão com os portais e com a parede
+
     Jogo simples
+
