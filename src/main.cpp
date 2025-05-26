@@ -303,13 +303,13 @@ int main()
       glBindVertexArray(0);
 
       glm::vec4 p_model(0.5f, 0.5f, 0.5f, 1.0f);
-      TextRendering_ShowModelViewProjection(window, the_projection, the_view, the_model, p_model);
+      // TextRendering_ShowModelViewProjection(window, the_projection, the_view, the_model, p_model);
 
-      TextRendering_ShowEulerAngles(window);
+      // TextRendering_ShowEulerAngles(window);
 
-      TextRendering_ShowProjection(window);
+      // TextRendering_ShowProjection(window);
 
-      TextRendering_ShowFramesPerSecond(window);
+      // TextRendering_ShowFramesPerSecond(window);
 
       glfwSwapBuffers(window);
 
