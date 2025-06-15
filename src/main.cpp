@@ -190,6 +190,22 @@ bool g_LeftMouseButtonPressed = false;
 bool g_RightMouseButtonPressed = false; // Análogo para botão direito do mouse
 bool g_MiddleMouseButtonPressed = false; // Análogo para botão do meio do mouse
 
+// "g_KeyW_Pressed = true" se o usuário está com a tecla W do teclado pressionada
+// no momento atual. Veja função KeyCallback();
+bool g_KeyW_Pressed = false;
+
+// "g_KeyW_Pressed = true" se o usuário está com a tecla S do teclado pressionada
+// no momento atual. Veja função KeyCallback();
+bool g_KeyS_Pressed = false;
+
+// "g_KeyW_Pressed = true" se o usuário está com a tecla D do teclado pressionada
+// no momento atual. Veja função KeyCallback();
+bool g_KeyD_Pressed = false;
+
+// "g_KeyW_Pressed = true" se o usuário está com a tecla A do teclado pressionada
+// no momento atual. Veja função KeyCallback();
+bool g_KeyA_Pressed = false;
+
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
@@ -253,7 +269,7 @@ int main(int argc, char* argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "INF01047 - Seu Cartao - Seu Nome", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "INF01047 - Trabalho Final Rayan e Gabriel Henrique", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -331,6 +347,10 @@ int main(int argc, char* argv[])
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
+    glm::vec4 camera_position_c  = glm::vec4(0.0f,0.0f,5.0f,1.0f); // Ponto "c", centro da câmera
+    float speed = 1.0f; // Velocidade da câmera
+    float prev_time = (float) glfwGetTime();
+
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -363,10 +383,36 @@ int main(int argc, char* argv[])
 
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
-        glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
-        glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
+        glm::vec4 camera_view_vector = glm::vec4(x,y,z,0.0f); // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+
+        // Atualiza delta de tempo
+        float current_time = (float) glfwGetTime();
+        float delta_t = current_time - prev_time;
+        prev_time = current_time;
+
+        // Realiza movimentação de objetos
+        glm::vec4 camera_w_vector = -(camera_view_vector / norm(camera_view_vector));
+        camera_w_vector.y = 0;
+
+        if(g_KeyW_Pressed){
+            // W - movimentação da câmera para frente
+            camera_position_c += -camera_w_vector * speed * delta_t;
+        }
+        if(g_KeyS_Pressed){
+            // S - movimentação da câmera para trás
+            camera_position_c += camera_w_vector * speed * delta_t;
+        }
+        if(g_KeyD_Pressed){
+            // D - movimentação da câmera para direita
+            glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
+            camera_position_c += (upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+        }
+        if(g_KeyA_Pressed){
+            // A - movimentação da câmera para esquerda
+            glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
+            camera_position_c += -(upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+        }
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
@@ -430,7 +476,8 @@ int main(int argc, char* argv[])
         DrawVirtualObject("the_bunny");
 
         // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-1.1f,0.0f);
+        model = Matrix_Translate(0.0f,-1.1f,0.0f) 
+              * Matrix_Scale(50.0f, 1.0f, 50.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
@@ -1063,69 +1110,66 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 // cima da janela OpenGL.
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
-    // Abaixo executamos o seguinte: caso o botão esquerdo do mouse esteja
-    // pressionado, computamos quanto que o mouse se movimento desde o último
+    // Computamos quanto que o mouse se movimentou desde o último
     // instante de tempo, e usamos esta movimentação para atualizar os
     // parâmetros que definem a posição da câmera dentro da cena virtual.
     // Assim, temos que o usuário consegue controlar a câmera.
 
-    if (g_LeftMouseButtonPressed)
-    {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-    
-        // Atualizamos parâmetros da câmera com os deslocamentos
-        g_CameraTheta -= 0.01f*dx;
-        g_CameraPhi   += 0.01f*dy;
-    
-        // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
-        float phimax = 3.141592f/2;
-        float phimin = -phimax;
-    
-        if (g_CameraPhi > phimax)
-            g_CameraPhi = phimax;
-    
-        if (g_CameraPhi < phimin)
-            g_CameraPhi = phimin;
-    
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
-    }
+    // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
+    float dx = xpos - g_LastCursorPosX;
+    float dy = ypos - g_LastCursorPosY;
 
-    if (g_RightMouseButtonPressed)
-    {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-    
-        // Atualizamos parâmetros da antebraço com os deslocamentos
-        g_ForearmAngleZ -= 0.01f*dx;
-        g_ForearmAngleX += 0.01f*dy;
-    
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
-    }
+    // Atualizamos parâmetros da câmera com os deslocamentos
+    g_CameraTheta -= 0.01f*dx;
+    g_CameraPhi   -= 0.01f*dy;
 
-    if (g_MiddleMouseButtonPressed)
-    {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
+    // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
+    float phimax = 3.141592f/2;
+    float phimin = -phimax;
+
+    if (g_CameraPhi > phimax)
+        g_CameraPhi = phimax;
+
+    if (g_CameraPhi < phimin)
+        g_CameraPhi = phimin;
+
+    // Atualizamos as variáveis globais para armazenar a posição atual do
+    // cursor como sendo a última posição conhecida do cursor.
+    g_LastCursorPosX = xpos;
+    g_LastCursorPosY = ypos;
     
-        // Atualizamos parâmetros da antebraço com os deslocamentos
-        g_TorsoPositionX += 0.01f*dx;
-        g_TorsoPositionY -= 0.01f*dy;
+
+    // if (g_RightMouseButtonPressed)
+    // {
+    //     // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
+    //     float dx = xpos - g_LastCursorPosX;
+    //     float dy = ypos - g_LastCursorPosY;
     
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
-    }
+    //     // Atualizamos parâmetros da antebraço com os deslocamentos
+    //     g_ForearmAngleZ -= 0.01f*dx;
+    //     g_ForearmAngleX += 0.01f*dy;
+    
+    //     // Atualizamos as variáveis globais para armazenar a posição atual do
+    //     // cursor como sendo a última posição conhecida do cursor.
+    //     g_LastCursorPosX = xpos;
+    //     g_LastCursorPosY = ypos;
+    // }
+
+    // if (g_MiddleMouseButtonPressed)
+    // {
+    //     // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
+    //     float dx = xpos - g_LastCursorPosX;
+    //     float dy = ypos - g_LastCursorPosY;
+    
+    //     // Atualizamos parâmetros da antebraço com os deslocamentos
+    //     g_TorsoPositionX += 0.01f*dx;
+    //     g_TorsoPositionY -= 0.01f*dy;
+    
+    //     // Atualizamos as variáveis globais para armazenar a posição atual do
+    //     // cursor como sendo a última posição conhecida do cursor.
+    //     g_LastCursorPosX = xpos;
+    //     g_LastCursorPosY = ypos;
+    // }
 }
 
 // Função callback chamada sempre que o usuário movimenta a "rodinha" do mouse.
@@ -1221,6 +1265,78 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         LoadShadersFromFiles();
         fprintf(stdout,"Shaders recarregados!\n");
         fflush(stdout);
+    }
+
+    if (key == GLFW_KEY_W)
+    {
+        if (action == GLFW_PRESS)
+            // Usuário apertou a tecla W, então atualizamos o estado para pressionada
+            g_KeyW_Pressed = true;
+        
+        else if (action == GLFW_RELEASE)
+            // Usuário largou a tecla W, então atualizamos o estado para NÃO pressionada
+            g_KeyW_Pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            // Usuário está segurando a tecla W e o sistema operacional está
+            // disparando eventos de repetição. Neste caso, não precisamos
+            // atualizar o estado da tecla, pois antes de um evento REPEAT
+            // necessariamente deve ter ocorrido um evento PRESS.
+            ;
+    }
+
+    if (key == GLFW_KEY_S)
+    {
+        if (action == GLFW_PRESS)
+            // Usuário apertou a tecla S, então atualizamos o estado para pressionada
+            g_KeyS_Pressed = true;
+        
+        else if (action == GLFW_RELEASE)
+            // Usuário largou a tecla S, então atualizamos o estado para NÃO pressionada
+            g_KeyS_Pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            // Usuário está segurando a tecla S e o sistema operacional está
+            // disparando eventos de repetição. Neste caso, não precisamos
+            // atualizar o estado da tecla, pois antes de um evento REPEAT
+            // necessariamente deve ter ocorrido um evento PRESS.
+            ;
+    }
+
+    if (key == GLFW_KEY_D)
+    {
+        if (action == GLFW_PRESS)
+            // Usuário apertou a tecla D, então atualizamos o estado para pressionada
+            g_KeyD_Pressed = true;
+        
+        else if (action == GLFW_RELEASE)
+            // Usuário largou a tecla D, então atualizamos o estado para NÃO pressionada
+            g_KeyD_Pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            // Usuário está segurando a tecla D e o sistema operacional está
+            // disparando eventos de repetição. Neste caso, não precisamos
+            // atualizar o estado da tecla, pois antes de um evento REPEAT
+            // necessariamente deve ter ocorrido um evento PRESS.
+            ;
+    }
+
+    if (key == GLFW_KEY_A)
+    {
+        if (action == GLFW_PRESS)
+            // Usuário apertou a tecla A, então atualizamos o estado para pressionada
+            g_KeyA_Pressed = true;
+        
+        else if (action == GLFW_RELEASE)
+            // Usuário largou a tecla A, então atualizamos o estado para NÃO pressionada
+            g_KeyA_Pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            // Usuário está segurando a tecla A e o sistema operacional está
+            // disparando eventos de repetição. Neste caso, não precisamos
+            // atualizar o estado da tecla, pois antes de um evento REPEAT
+            // necessariamente deve ter ocorrido um evento PRESS.
+            ;
     }
 }
 
