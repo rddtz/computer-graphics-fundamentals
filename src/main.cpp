@@ -266,8 +266,8 @@ int main(int argc, char* argv[])
     // funções modernas de OpenGL.
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
-    // de pixels, e com título "INF01047 ...".
+    // Criamos uma janela do sistema operacional, com resolução de 1920x1080,
+    // em tela cheia, e com título "INF01047 - Trabalho Final Rayan e Gabriel Henrique"
     GLFWwindow* window;
     window = glfwCreateWindow(1920, 1080, "INF01047 - Trabalho Final Rayan e Gabriel Henrique", glfwGetPrimaryMonitor(), NULL);
     if (!window)
@@ -276,6 +276,9 @@ int main(int argc, char* argv[])
         fprintf(stderr, "ERROR: glfwCreateWindow() failed.\n");
         std::exit(EXIT_FAILURE);
     }
+
+    // Escondemos o cursor do mouse para o jogo em primeira pessoa
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // Definimos a função de callback que será chamada sempre que o usuário
     // pressionar alguma tecla do teclado ...
