@@ -210,7 +210,7 @@ bool g_KeyA_Pressed = false;
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
 // renderização.
-float g_CameraTheta = 0.0f; // Ângulo no plano ZX em relação ao eixo Z
+float g_CameraTheta = 3.141592f; // Ângulo no plano ZX em relação ao eixo Z
 float g_CameraPhi = 0.0f;   // Ângulo em relação ao eixo Y
 float g_CameraDistance = 3.5f; // Distância da câmera para a origem
 
@@ -301,7 +301,7 @@ int main(int argc, char* argv[])
     // redimensionada, por consequência alterando o tamanho do "framebuffer"
     // (região de memória onde são armazenados os pixels da imagem).
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
-    FramebufferSizeCallback(window, 800, 600); // Forçamos a chamada do callback acima, para definir g_ScreenRatio.
+    FramebufferSizeCallback(window, 1920, 1080); // Forçamos a chamada do callback acima, para definir g_ScreenRatio.
 
     // Imprimimos no terminal informações sobre a GPU do sistema
     const GLubyte *vendor      = glGetString(GL_VENDOR);
@@ -351,7 +351,7 @@ int main(int argc, char* argv[])
     glFrontFace(GL_CCW);
 
     glm::vec4 camera_position_c  = glm::vec4(0.0f,0.0f,5.0f,1.0f); // Ponto "c", centro da câmera
-    float speed = 1.0f; // Velocidade da câmera
+    float speed = 3.0f; // Velocidade da câmera
     float prev_time = (float) glfwGetTime();
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
@@ -427,7 +427,7 @@ int main(int argc, char* argv[])
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -10.0f; // Posição do "far plane"
+        float farplane  = -25.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -480,7 +480,39 @@ int main(int argc, char* argv[])
 
         // Desenhamos o plano do chão
         model = Matrix_Translate(0.0f,-1.1f,0.0f) 
-              * Matrix_Scale(50.0f, 1.0f, 50.0f);
+              * Matrix_Scale(10.0f, 1.0f, 10.0f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, PLANE);
+        DrawVirtualObject("the_plane");
+
+        // Desenhamos quatro paredes
+        model = Matrix_Translate(0.0f,2.5f,-10.0f) 
+              * Matrix_Rotate_X(3.141592f/2)
+              * Matrix_Scale(10.0f, 1.0f, 5.0f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, PLANE);
+        DrawVirtualObject("the_plane");
+
+        model = Matrix_Translate(-10.0f,2.5f,0.0f) 
+              * Matrix_Rotate_Y(3.141592f/2)
+              * Matrix_Rotate_X(3.141592f/2)
+              * Matrix_Scale(10.0f, 1.0f, 5.0f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, PLANE);
+        DrawVirtualObject("the_plane");
+
+        model = Matrix_Translate(10.0f,2.5f,0.0f) 
+              * Matrix_Rotate_Y(-3.141592f/2)
+              * Matrix_Rotate_X(3.141592f/2)
+              * Matrix_Scale(10.0f, 1.0f, 5.0f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, PLANE);
+        DrawVirtualObject("the_plane");
+
+        model = Matrix_Translate(0.0f,2.5f,10.0f) 
+              * Matrix_Rotate_Y(3.141592f)
+              * Matrix_Rotate_X(3.141592f/2)
+              * Matrix_Scale(10.0f, 1.0f, 5.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
