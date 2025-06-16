@@ -321,6 +321,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
     LoadTextureImage("../../data/portalwall.png"); // TexutreImage2
 
+
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
     ComputeNormals(&spheremodel);
@@ -333,6 +334,13 @@ int main(int argc, char* argv[])
     ObjModel planemodel("../../data/plane.obj");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
+
+    ObjModel gunmodel("/home/rayan/graduation/estudos/fcg/tf/textures/pistol.obj");
+    printf("2 - ");
+    // ComputeNormals(&planemodel);
+    printf("3 - ");
+    BuildTrianglesAndAddToVirtualScene(&gunmodel);
+
 
     if ( argc > 1 )
     {
@@ -351,7 +359,7 @@ int main(int argc, char* argv[])
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
-    glm::vec4 camera_position_c  = glm::vec4(0.0f,0.0f,5.0f,1.0f); // Ponto "c", centro da câmera
+    glm::vec4 camera_position_c  = glm::vec4(0.0f,4.0f,5.0f,1.0f); // Ponto "c", centro da câmera
     float speed = 3.0f; // Velocidade da câmera
     float prev_time = (float) glfwGetTime();
 
@@ -421,6 +429,7 @@ int main(int argc, char* argv[])
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
         glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
+	glm::mat4 T_view = T_Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
 
         // Agora computamos a matriz de Projeção.
         glm::mat4 projection;
@@ -462,6 +471,7 @@ int main(int argc, char* argv[])
         #define SPHERE 0
         #define BUNNY  1
         #define PLANE  2
+	#define GUN 3
 
         // Desenhamos o modelo da esfera
         model = Matrix_Translate(-1.0f,0.0f,0.0f)
@@ -472,6 +482,16 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, SPHERE);
         DrawVirtualObject("the_sphere");
 
+        // Desenhamos o coelho que segue a camera
+        model = T_view
+	  * Matrix_Translate(1,  -2, -0.5)
+	  * Matrix_Rotate_Y(3.1415)
+	  * Matrix_Scale(0.05f, 0.05f, 0.05f);
+
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, GUN);
+        DrawVirtualObject("object_0");
+
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(1.0f,0.0f,0.0f)
               * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
@@ -480,21 +500,21 @@ int main(int argc, char* argv[])
         DrawVirtualObject("the_bunny");
 
         // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-1.1f,0.0f) 
+        model = Matrix_Translate(0.0f,-1.1f,0.0f)
               * Matrix_Scale(10.0f, 1.0f, 10.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
         // Desenhamos quatro paredes
-        model = Matrix_Translate(0.0f,3.9f,-10.0f) 
-              * Matrix_Rotate_X(3.141592f/2)
+        model = Matrix_Translate(0.0f,3.9f,-10.0f)
+              * Matrix_Rotate_X(3.141592f /2)
               * Matrix_Scale(10.0f, 1.0f, 10.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        model = Matrix_Translate(-10.0f,3.9f,0.0f) 
+        model = Matrix_Translate(-10.0f,3.9f,0.0f)
               * Matrix_Rotate_Y(3.141592f/2)
               * Matrix_Rotate_X(3.141592f/2)
               * Matrix_Scale(10.0f, 1.0f, 10.0f);
@@ -502,7 +522,7 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        model = Matrix_Translate(10.0f,3.9f,0.0f) 
+        model = Matrix_Translate(10.0f,3.9f,0.0f)
               * Matrix_Rotate_Y(-3.141592f/2)
               * Matrix_Rotate_X(3.141592f/2)
               * Matrix_Scale(10.0f, 1.0f, 10.0f);
@@ -510,7 +530,7 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        model = Matrix_Translate(0.0f,3.9f,10.0f) 
+        model = Matrix_Translate(0.0f,3.9f,10.0f)
               * Matrix_Rotate_Y(3.141592f)
               * Matrix_Rotate_X(3.141592f/2)
               * Matrix_Scale(10.0f, 1.0f, 10.0f);
@@ -1055,7 +1075,7 @@ GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id)
         fprintf(stderr, "%s", output.c_str());
     }
 
-    // Os "Shader Objects" podem ser marcados para deleção após serem linkados 
+    // Os "Shader Objects" podem ser marcados para deleção após serem linkados
     glDeleteShader(vertex_shader_id);
     glDeleteShader(fragment_shader_id);
 
@@ -1173,18 +1193,18 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
     // cursor como sendo a última posição conhecida do cursor.
     g_LastCursorPosX = xpos;
     g_LastCursorPosY = ypos;
-    
+
 
     // if (g_RightMouseButtonPressed)
     // {
     //     // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
     //     float dx = xpos - g_LastCursorPosX;
     //     float dy = ypos - g_LastCursorPosY;
-    
+
     //     // Atualizamos parâmetros da antebraço com os deslocamentos
     //     g_ForearmAngleZ -= 0.01f*dx;
     //     g_ForearmAngleX += 0.01f*dy;
-    
+
     //     // Atualizamos as variáveis globais para armazenar a posição atual do
     //     // cursor como sendo a última posição conhecida do cursor.
     //     g_LastCursorPosX = xpos;
@@ -1196,11 +1216,11 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
     //     // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
     //     float dx = xpos - g_LastCursorPosX;
     //     float dy = ypos - g_LastCursorPosY;
-    
+
     //     // Atualizamos parâmetros da antebraço com os deslocamentos
     //     g_TorsoPositionX += 0.01f*dx;
     //     g_TorsoPositionY -= 0.01f*dy;
-    
+
     //     // Atualizamos as variáveis globais para armazenar a posição atual do
     //     // cursor como sendo a última posição conhecida do cursor.
     //     g_LastCursorPosX = xpos;
@@ -1308,7 +1328,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         if (action == GLFW_PRESS)
             // Usuário apertou a tecla W, então atualizamos o estado para pressionada
             g_KeyW_Pressed = true;
-        
+
         else if (action == GLFW_RELEASE)
             // Usuário largou a tecla W, então atualizamos o estado para NÃO pressionada
             g_KeyW_Pressed = false;
@@ -1326,7 +1346,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         if (action == GLFW_PRESS)
             // Usuário apertou a tecla S, então atualizamos o estado para pressionada
             g_KeyS_Pressed = true;
-        
+
         else if (action == GLFW_RELEASE)
             // Usuário largou a tecla S, então atualizamos o estado para NÃO pressionada
             g_KeyS_Pressed = false;
@@ -1344,7 +1364,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         if (action == GLFW_PRESS)
             // Usuário apertou a tecla D, então atualizamos o estado para pressionada
             g_KeyD_Pressed = true;
-        
+
         else if (action == GLFW_RELEASE)
             // Usuário largou a tecla D, então atualizamos o estado para NÃO pressionada
             g_KeyD_Pressed = false;
@@ -1362,7 +1382,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         if (action == GLFW_PRESS)
             // Usuário apertou a tecla A, então atualizamos o estado para pressionada
             g_KeyA_Pressed = true;
-        
+
         else if (action == GLFW_RELEASE)
             // Usuário largou a tecla A, então atualizamos o estado para NÃO pressionada
             g_KeyA_Pressed = false;
@@ -1499,7 +1519,7 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
     if ( ellapsed_seconds > 1.0f )
     {
         numchars = snprintf(buffer, 20, "%.2f fps", ellapsed_frames / ellapsed_seconds);
-    
+
         old_seconds = seconds;
         ellapsed_frames = 0;
     }
@@ -1681,4 +1701,3 @@ void PrintObjModelInfo(ObjModel* model)
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
-

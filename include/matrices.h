@@ -220,6 +220,37 @@ float dotproduct(glm::vec4 u, glm::vec4 v)
     return u1*v1 + u2*v2 + u3*v3;
 }
 
+
+// Matriz de mudança de coordenadas para o sistema de coordenadas da Câmera.
+glm::mat4 T_Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::vec4 up_vector)
+{
+    glm::vec4 w = -view_vector;
+    glm::vec4 u = crossproduct(up_vector, w);
+
+    // Normalizamos os vetores u e w
+    w = w / norm(w);
+    u = u / norm(u);
+
+    glm::vec4 v = crossproduct(w,u);
+
+    float ux = u.x;
+    float uy = u.y;
+    float uz = u.z;
+    float vx = v.x;
+    float vy = v.y;
+    float vz = v.z;
+    float wx = w.x;
+    float wy = w.y;
+    float wz = w.z;
+
+    return Matrix(
+        ux   , vx   , wx   , position_c.x,
+        uy   , vy   , wy   , position_c.y,
+        uz   , vz   , wz   , position_c.z,
+        0.0f , 0.0f , 0.0f , 1.0f
+    );
+}
+
 // Matriz de mudança de coordenadas para o sistema de coordenadas da Câmera.
 glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::vec4 up_vector)
 {
