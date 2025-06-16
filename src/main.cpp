@@ -319,6 +319,7 @@ int main(int argc, char* argv[])
     // Carregamos duas imagens para serem utilizadas como textura
     LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
+    LoadTextureImage("../../data/portalwall.png"); // TexutreImage2
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
@@ -486,43 +487,43 @@ int main(int argc, char* argv[])
         DrawVirtualObject("the_plane");
 
         // Desenhamos quatro paredes
-        model = Matrix_Translate(0.0f,2.5f,-10.0f) 
+        model = Matrix_Translate(0.0f,3.9f,-10.0f) 
               * Matrix_Rotate_X(3.141592f/2)
-              * Matrix_Scale(10.0f, 1.0f, 5.0f);
+              * Matrix_Scale(10.0f, 1.0f, 10.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        model = Matrix_Translate(-10.0f,2.5f,0.0f) 
+        model = Matrix_Translate(-10.0f,3.9f,0.0f) 
               * Matrix_Rotate_Y(3.141592f/2)
               * Matrix_Rotate_X(3.141592f/2)
-              * Matrix_Scale(10.0f, 1.0f, 5.0f);
+              * Matrix_Scale(10.0f, 1.0f, 10.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        model = Matrix_Translate(10.0f,2.5f,0.0f) 
+        model = Matrix_Translate(10.0f,3.9f,0.0f) 
               * Matrix_Rotate_Y(-3.141592f/2)
               * Matrix_Rotate_X(3.141592f/2)
-              * Matrix_Scale(10.0f, 1.0f, 5.0f);
+              * Matrix_Scale(10.0f, 1.0f, 10.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        model = Matrix_Translate(0.0f,2.5f,10.0f) 
+        model = Matrix_Translate(0.0f,3.9f,10.0f) 
               * Matrix_Rotate_Y(3.141592f)
               * Matrix_Rotate_X(3.141592f/2)
-              * Matrix_Scale(10.0f, 1.0f, 5.0f);
+              * Matrix_Scale(10.0f, 1.0f, 10.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
-        TextRendering_ShowEulerAngles(window);
+        //TextRendering_ShowEulerAngles(window);
 
         // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
-        TextRendering_ShowProjection(window);
+        //TextRendering_ShowProjection(window);
 
         // Imprimimos na tela informação sobre o número de quadros renderizados
         // por segundo (frames per second).

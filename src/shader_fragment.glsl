@@ -130,11 +130,18 @@ void main()
     // e da imagem TextureImage1
     vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
 
-    // Equação de Iluminação
-    float lambert = max(0,dot(n,l));
-    //          *** Cor da Terra         *** Luzes noturnas
-    color.rgb = Kd0 * (lambert + 0.01) + Kd1 * max(0,(1 - lambert * 4));
+    vec3 Kd2 = texture(TextureImage2, vec2(U,V)).rgb;
 
+    float lambert = max(0,dot(n,l));
+
+
+    if (!(object_id == PLANE)){
+        // Equação de Iluminação
+        //          *** Cor da Terra         *** Luzes noturnas
+        color.rgb = Kd0 * (lambert + 0.01) + Kd1 * max(0,(1 - lambert * 4));
+    } else {
+        color.rgb = Kd2;
+    }
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:
     // 1) Habilitar a operação de "blending" de OpenGL logo antes de realizar o
