@@ -22,6 +22,7 @@ uniform mat4 projection;
 #define SPHERE 0
 #define BUNNY  1
 #define PLANE  2
+#define PORTALGUN 3
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -32,6 +33,7 @@ uniform vec4 bbox_max;
 uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
+uniform sampler2D TextureImage3;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -124,6 +126,12 @@ void main()
         U = texcoords.x;
         V = texcoords.y;
     }
+       else if ( object_id == PORTALGUN )
+    {
+        // Coordenadas de textura do plano, obtidas do arquivo OBJ.
+        U = texcoords.x;
+        V = texcoords.y;
+    }
 
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
     vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
@@ -132,6 +140,8 @@ void main()
 
     vec3 Kd2 = texture(TextureImage2, vec2(U,V)).rgb;
 
+    vec3 Kd3 = texture(TextureImage3, vec2(U,V)).rgb;
+
     float lambert = max(0,dot(n,l));
 
 
@@ -139,8 +149,10 @@ void main()
         // Equação de Iluminação
         //          *** Cor da Terra         *** Luzes noturnas
         color.rgb = Kd0 * (lambert + 0.01) + Kd1 * max(0,(1 - lambert * 4));
+    } else if (object_id == PORTALGUN){
+        color.rgb = Kd3;
     } else {
-        color.rgb = Kd2;
+    color.rgb = Kd2;
     }
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:
@@ -159,5 +171,4 @@ void main()
     // Cor final com correção gamma, considerando monitor sRGB.
     // Veja https://en.wikipedia.org/w/index.php?title=Gamma_correction&oldid=751281772#Windows.2C_Mac.2C_sRGB_and_TV.2Fvideo_standard_gammas
     color.rgb = pow(color.rgb, vec3(1.0,1.0,1.0)/2.2);
-} 
-
+}

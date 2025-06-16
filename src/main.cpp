@@ -320,6 +320,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
     LoadTextureImage("../../data/portalwall.png"); // TexutreImage2
+    LoadTextureImage("../../textures/portalgun/textures/portalgun_col.jpg"); // TexutreImage2
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -335,12 +336,9 @@ int main(int argc, char* argv[])
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
-    ObjModel gunmodel("/home/rayan/graduation/estudos/fcg/tf/textures/pistol.obj");
-    printf("2 - ");
-    // ComputeNormals(&planemodel);
-    printf("3 - ");
+    ObjModel gunmodel("../../textures/portalgun/portalgun.obj");
+    // ComputeNormals(&gunmodel);
     BuildTrianglesAndAddToVirtualScene(&gunmodel);
-
 
     if ( argc > 1 )
     {
@@ -471,7 +469,7 @@ int main(int argc, char* argv[])
         #define SPHERE 0
         #define BUNNY  1
         #define PLANE  2
-	#define GUN 3
+	#define PORTALGUN 3
 
         // Desenhamos o modelo da esfera
         model = Matrix_Translate(-1.0f,0.0f,0.0f)
@@ -484,13 +482,17 @@ int main(int argc, char* argv[])
 
         // Desenhamos o coelho que segue a camera
         model = T_view
-	  * Matrix_Translate(1,  -2, -0.5)
-	  * Matrix_Rotate_Y(3.1415)
-	  * Matrix_Scale(0.05f, 0.05f, 0.05f);
+	  * Matrix_Translate(1,  -1, -2)
+	  // * Matrix_Rotate_Y(3.1415)
+	  * Matrix_Scale(1, 1, 1);
 
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, GUN);
-        DrawVirtualObject("object_0");
+	glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, PORTALGUN);
+        DrawVirtualObject("PortalGun");
+
+        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        // glUniform1i(g_object_id_uniform, GUN);
+        // DrawVirtualObject("object_0");
 
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(1.0f,0.0f,0.0f)
