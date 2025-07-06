@@ -174,6 +174,7 @@ int main(int argc, char* argv[]) {
 
   ObjModel wallmodel("../../data/wall.obj");
   BuildTrianglesAndAddToVirtualScene(&wallmodel);
+  SetWallsInfo();
 
   if (argc > 1) {
     ObjModel model(argv[1]);
@@ -341,12 +342,13 @@ int main(int argc, char* argv[]) {
     }
 
     if(g_LeftMouseButtonPressed){
-
+      std::cout << CheckCollisionLineToWalls(camera_position_c, camera_view_vector) << "\n";
       // get position in the wall
       // spawn portal
     }
 
     if(g_RightMouseButtonPressed){
+      std::cout << CheckCollisionLineToWalls(camera_position_c, camera_view_vector) << "\n";
       // get position in the wall
       // spawn portal
     }
@@ -411,10 +413,9 @@ int main(int argc, char* argv[]) {
                       Matrix_Scale(0.3, 0.3, 0.3);
     DrawObject(model, "PortalGun", PORTALGUN);
 
-    // model = T_view * Matrix_Translate(0.0f, 0.0f, -2.0f) * Matrix_Scale(2, 2, 2);
-    // DrawObject(model, "the_cube", CUBE);
+    model = T_view * Matrix_Translate(0.0, 0.0, -2.5) * Matrix_Scale(0.05, 0.05, 0.05);
+    DrawObject(model, "the_sphere", SPHERE);
 
-    DrawCrossair(view, camera_position_c, nearplane, farplane);
 
     TextRendering_ShowFramesPerSecond(window);
 
@@ -566,10 +567,9 @@ void LoadTextures() {
 }
 
 void DrawObject(glm::mat4 model, const char* name, int id) {
+
   glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-
   glUniform1i(g_object_id_uniform, id);
-
   DrawVirtualObject(name);
 }
 
@@ -656,8 +656,5 @@ void DrawCrossair(glm::mat4 view, glm::vec4 camera, float nearplane, float farpl
   glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
   glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
 		     glm::value_ptr(projection));
-
-  glm::mat4 model = Matrix_Translate(camera.x, camera.y, camera.z - 10);
-  DrawObject(model, "the_cube", CUBE);
 
 }
