@@ -345,6 +345,7 @@ int main(int argc, char* argv[]) {
     DrawObject(model, "the_portal", ORANGE_PORTAL);
 
     // Drawing the portal gun
+    glClear(GL_DEPTH_BUFFER_BIT);
     model = T_view * Matrix_Translate(1, -1, -2) * Matrix_Scale(1, 1, 1);
     DrawObject(model, "PortalGun", PORTALGUN);
 
