@@ -615,6 +615,7 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       bluePortalRotation = Matrix_Rotate_Y(-3.141592f);
       bluePortalSeesDirection = NORTH;
 
+      bluePortalPosition = colision_point;
       bluePortalPosition.z -= delta_wall;
     } else {
       orangePortalRotation = Matrix_Rotate_Y(-3.141592f);

@@ -87,7 +87,7 @@ int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transfor
     float minz = std::min(portal.max.z, portal.min.z);
 
     if(player_point.z <= maxz && player_point.z >= minz){
-      printf("Validou o Z quando entrou no X");
+
       return CheckCollisionPointToPlane(player_point, portal_normal, (portal.max + portal.min)/2.0f, 1.1);
     }
   } else { // normal is z, portal is aligned with x
@@ -123,8 +123,10 @@ std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_posit
 
       float t = (dotproduct(wall_normal, higher_walls[i].min) - pn) / nd;
       if (t >= 0.0f) {
-	intersection_point = std::min(intersection_point, t);
-	hit_wall_normal = wall_normal;
+	if(t < intersection_point){
+	  intersection_point = t;
+	  hit_wall_normal = wall_normal;
+	}
       }
     }
 
@@ -142,7 +144,6 @@ std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_posit
     }
   }
 
-  printf("%f %f %f\n", point.x, point.y, point.z);
   std::pair<glm::vec4, glm::vec4> ret = {point, hit_wall_normal};
 
   return ret;
