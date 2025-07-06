@@ -12,6 +12,9 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
                           int portal_color);
 void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform);
 
+void DrawCrossair(glm::mat4 view, glm::vec4 camera, float nearplane, float farplane);
+
+
 #define SPHERE 0
 #define BUNNY 1
 #define WALL 2
@@ -273,6 +276,7 @@ int main(int argc, char* argv[]) {
                                camera_position_c.z);
       DrawObject(model, "the_bunny", BUNNY);
 
+
     } else {
       // Texturas dos portais nulas
     }
@@ -302,6 +306,8 @@ int main(int argc, char* argv[]) {
         -(camera_view_vector / norm(camera_view_vector));
     camera_w_vector.y = 0;
 
+
+    //  -=-=-=-=-=-=-=-=-=-=-=-=-=- USER INPUT HANDLING -=-=-=-=-=-=-=-=-=-=-=-=-=-
     glm::vec4 cam_temp = camera_position_c;
 
     if (g_KeyW_Pressed) {
@@ -333,6 +339,19 @@ int main(int argc, char* argv[]) {
         camera_position_c = cam_temp;
       }
     }
+
+    if(g_LeftMouseButtonPressed){
+
+      // get position in the wall
+      // spawn portal
+    }
+
+    if(g_RightMouseButtonPressed){
+      // get position in the wall
+      // spawn portal
+    }
+
+    //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
     glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector,
                                         camera_up_vector);
@@ -391,6 +410,11 @@ int main(int argc, char* argv[]) {
     glm::mat4 model = T_view * Matrix_Translate(0.4, -0.3, -0.8) *
             Matrix_Scale(0.3, 0.3, 0.3);
     DrawObject(model, "PortalGun", PORTALGUN);
+
+    // model = T_view * Matrix_Translate(0.0f, 0.0f, -2.0f) * Matrix_Scale(2, 2, 2);
+    // DrawObject(model, "the_cube", CUBE);
+
+    DrawCrossair(view, camera_position_c, nearplane, farplane);
 
     TextRendering_ShowFramesPerSecond(window);
 
@@ -492,6 +516,8 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
   model = Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) *
           Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
+
+
 }
 
 void LoadTextures() {
@@ -571,4 +597,21 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       orangePortalPosition.x -= delta_wall;
     }
   }
+}
+
+void DrawCrossair(glm::mat4 view, glm::vec4 camera, float nearplane, float farplane){
+
+  float t = 1.5f * g_CameraDistance / 2.5f;
+  float b = -t;
+  float r = t * g_ScreenRatio;
+  float l = -r;
+  glm::mat4 projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
+
+  glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
+  glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
+		     glm::value_ptr(projection));
+
+  glm::mat4 model = Matrix_Translate(camera.x, camera.y, camera.z - 10);
+  DrawObject(model, "the_cube", CUBE);
+
 }

@@ -80,6 +80,10 @@ int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transfor
 
 }
 
+int CheckCollisionLineToPlane(glm::vec4 view_vector){
+  return 0;
+}
+
 int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane){
 
   //                    moving the point to not enter in the wall
