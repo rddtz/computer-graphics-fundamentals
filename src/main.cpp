@@ -1,5 +1,6 @@
-#include "configs.h"        // Globals variables, includes and structs
-#include "lab_functions.h"  // Functions defined in the labs
+#include "configs.h" // Globals variables, includes and structs
+#include "lab_functions.h" // Functions defined in the labs
+#include "collision.h" // Collision functions
 
 void LoadTextures();  // Function to Load the texture from images
 void DrawObject(glm::mat4 model, const char* name,
@@ -12,11 +13,15 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
 #define WALL 2
 #define PORTALGUN 3
 #define FLOOR 4
+#define CUBE 5
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
 
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
+
+#define PORTAL_WIDTH 620
+#define PORTAL_HEIGHT 1080
 
 int main(int argc, char* argv[]) {
   int success = glfwInit();
@@ -30,9 +35,9 @@ int main(int argc, char* argv[]) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+  #ifdef __APPLE__
+     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  #endif
 
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -159,6 +164,7 @@ int main(int argc, char* argv[]) {
   TextRendering_Init();
 
   glEnable(GL_DEPTH_TEST);
+
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
   glFrontFace(GL_CCW);
@@ -186,6 +192,7 @@ int main(int argc, char* argv[]) {
       glm::vec4 blue_portal_looking_at = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
       glm::vec4 camera_view_vector =
           blue_portal_looking_at - bluePortalPosition;
+      glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
 
       glm::vec4 camera_w_vector =
           -(camera_view_vector / norm(camera_view_vector));
@@ -278,6 +285,8 @@ int main(int argc, char* argv[]) {
     float x = r * cos(g_CameraPhi) * sin(g_CameraTheta);
 
     glm::vec4 camera_view_vector = glm::vec4(x, y, z, 0.0f);
+    //    glm::vec4
+    camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
 
     float current_time = (float)glfwGetTime();
     float delta_t = current_time - prev_time;
@@ -287,21 +296,37 @@ int main(int argc, char* argv[]) {
         -(camera_view_vector / norm(camera_view_vector));
     camera_w_vector.y = 0;
 
-    if (g_KeyW_Pressed) {
-      camera_position_c += -camera_w_vector * speed * delta_t;
+
+    glm::vec4 cam_temp = camera_position_c;
+
+    if(g_KeyW_Pressed){
+      cam_temp += -camera_w_vector * speed * delta_t;
+      if(!CheckColisionPointWalls(cam_temp)){
+	camera_position_c = cam_temp;
+      }
     }
-    if (g_KeyS_Pressed) {
-      camera_position_c += camera_w_vector * speed * delta_t;
+    if(g_KeyS_Pressed){
+      cam_temp += camera_w_vector * speed * delta_t;
+      CheckColisionPointWalls(cam_temp);
+      if(!CheckColisionPointWalls(cam_temp)){
+	camera_position_c = cam_temp;
+      }
     }
     if (g_KeyD_Pressed) {
       glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
-      camera_position_c +=
-          (upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+      cam_temp += (upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+      CheckColisionPointWalls(cam_temp);
+      if(!CheckColisionPointWalls(cam_temp)){
+	camera_position_c = cam_temp;
+      }
     }
     if (g_KeyA_Pressed) {
       glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
-      camera_position_c +=
-          -(upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+      cam_temp += -(upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+      CheckColisionPointWalls(cam_temp);
+      if(!CheckColisionPointWalls(cam_temp)){
+	camera_position_c = cam_temp;
+      }
     }
 
     glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector,
@@ -345,8 +370,7 @@ int main(int argc, char* argv[]) {
     DrawObject(model, "the_portal", ORANGE_PORTAL);
 
     // Drawing the portal gun
-    glClear(GL_DEPTH_BUFFER_BIT);
-    model = T_view * Matrix_Translate(1, -1, -2) * Matrix_Scale(1, 1, 1);
+    model = T_view * Matrix_Translate(0.4, -0.3, -0.8) * Matrix_Scale(0.3, 0.3, 0.3);
     DrawObject(model, "PortalGun", PORTALGUN);
 
     TextRendering_ShowFramesPerSecond(window);

@@ -1,6 +1,8 @@
 #ifndef _CONFIGS_H
 #define _CONFIGS_H
 
+#include <iostream> // for easy tests
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -35,6 +37,11 @@
 #include "matrices.h"
 
 // Structs utilizadas
+
+struct BoundingBox{
+    glm::vec4    min;
+    glm::vec4    max;
+} typedef BoundingBox;
 
 struct SceneObject
 {
