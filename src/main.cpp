@@ -22,7 +22,7 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform);
 #define ORANGE_PORTAL 11
 
 glm::vec4 bluePortalPosition = glm::vec4(5.0f, 2.0f, 0.0f, 1.0f);
-glm::mat4 bluePortalRotation = Matrix_Rotate_Y(-3.141592f / 2);
+glm::mat4 bluePortalRotation = Matrix_Identity();
 bool isBluePortalActive = true;
 
 glm::vec4 orangePortalPosition = glm::vec4(0.0f, 2.0f, -5.0f, 1.0f);
@@ -48,10 +48,9 @@ int main(int argc, char* argv[]) {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   GLFWwindow* window;
-  window =
-      glfwCreateWindow(1920, 1080,
-                       "INF01047 - Trabalho Final Rayan e Gabriel Henrique",
-                       glfwGetPrimaryMonitor(), NULL);
+  window = glfwCreateWindow(
+      1920, 1080, "INF01047 - Trabalho Final Rayan e Gabriel Henrique",
+      glfwGetPrimaryMonitor(), NULL);
   if (!window) {
     glfwTerminate();
     fprintf(stderr, "ERROR: glfwCreateWindow() failed.\n");
@@ -59,7 +58,7 @@ int main(int argc, char* argv[]) {
   }
 
   int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
+  glfwGetFramebufferSize(window, &width, &height);
 
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -100,8 +99,7 @@ int main(int argc, char* argv[]) {
   GLuint bluePortalViewRBO;
   glGenRenderbuffers(1, &bluePortalViewRBO);
   glBindRenderbuffer(GL_RENDERBUFFER, bluePortalViewRBO);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
-                        height);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                             GL_RENDERBUFFER, bluePortalViewRBO);
 
@@ -130,8 +128,7 @@ int main(int argc, char* argv[]) {
   GLuint orangePortalViewRBO;
   glGenRenderbuffers(1, &orangePortalViewRBO);
   glBindRenderbuffer(GL_RENDERBUFFER, orangePortalViewRBO);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
-                        height);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                             GL_RENDERBUFFER, orangePortalViewRBO);
 
@@ -231,7 +228,8 @@ int main(int argc, char* argv[]) {
 
       sceneObjects(view, projection, T_view, orangePortalTexture);
 
-      model = Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z);
+      model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
+                               camera_position_c.z);
       DrawObject(model, "the_bunny", BUNNY);
 
       // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
@@ -271,7 +269,8 @@ int main(int argc, char* argv[]) {
 
       sceneObjects(view, projection, T_view, orangePortalTexture);
 
-      model = Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z);
+      model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
+                               camera_position_c.z);
       DrawObject(model, "the_bunny", BUNNY);
 
     } else {
@@ -359,42 +358,37 @@ int main(int argc, char* argv[]) {
 
     sceneObjects(view, projection, T_view, orangePortalTexture);
 
-    glm::mat4 model = Matrix_Identity();
-
     glActiveTexture(GL_TEXTURE10);
     glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"), 10);
 
-    model = Matrix_Translate(5.0f, 2.5f, 0.0f) * bluePortalRotation *
-            Matrix_Scale(2.5f, 2.5f, 1.0f);
-    DrawObject(model, "the_portal", BLUE_PORTAL);
-
-    if (CheckCollisionPlayerPortal(camera_position_c, model)) {
-      printf("Colidiu com o portal azul\n");
-      MovePlayerToPortal(
-          &camera_position_c,
-          Matrix_Translate(0.0f, 2.5f, -5.0f) * Matrix_Scale(2.5f, 2.5f, 1.0f));
-    }
+    glm::mat4 modelBluePortal = Matrix_Translate(5.0f, 2.5f, 0.0f) *
+                                bluePortalRotation *
+                                Matrix_Scale(2.5f, 2.5f, 1.0f);
+    DrawObject(modelBluePortal, "the_portal", BLUE_PORTAL);
 
     glActiveTexture(GL_TEXTURE11);
     glBindTexture(GL_TEXTURE_2D, orangePortalTexture);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"),
                 11);
 
-    model = Matrix_Translate(0.0f, 2.5f, -5.0f) * orangePortalRotation *
-            Matrix_Scale(2.5f, 2.5f, 1.0f);
-    DrawObject(model, "the_portal", ORANGE_PORTAL);
+    glm::mat4 modelOrangePortal = Matrix_Translate(0.0f, 2.5f, -5.0f) *
+                                  orangePortalRotation *
+                                  Matrix_Scale(2.5f, 2.5f, 1.0f);
+    DrawObject(modelOrangePortal, "the_portal", ORANGE_PORTAL);
 
-    if (CheckCollisionPlayerPortal(camera_position_c, model)) {
+    if (CheckCollisionPlayerPortal(camera_position_c, modelBluePortal)) {
+      printf("Colidiu com o portal azul\n");
+      MovePlayerToPortal(&camera_position_c, modelOrangePortal);
+    }
+
+    if (CheckCollisionPlayerPortal(camera_position_c, modelOrangePortal)) {
       printf("Colidiu com o portal laranja\n");
-      MovePlayerToPortal(&camera_position_c,
-                         Matrix_Translate(5.0f, 2.5f, 0.0f) *
-                             Matrix_Rotate_Y(-3.141592f / 2) *
-                             Matrix_Scale(2.5f, 2.5f, 1.0f));
+      MovePlayerToPortal(&camera_position_c, modelBluePortal);
     }
 
     // Drawing the portal gun
-    model = T_view * Matrix_Translate(0.4, -0.3, -0.8) *
+    glm::mat4 model = T_view * Matrix_Translate(0.4, -0.3, -0.8) *
             Matrix_Scale(0.3, 0.3, 0.3);
     DrawObject(model, "PortalGun", PORTALGUN);
 
