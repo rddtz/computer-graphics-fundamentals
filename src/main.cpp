@@ -301,30 +301,30 @@ int main(int argc, char* argv[]) {
 
     if(g_KeyW_Pressed){
       cam_temp += -camera_w_vector * speed * delta_t;
-      if(!CheckColisionPointWalls(cam_temp)){
+      if(!CheckCollisionPointWalls(cam_temp)){
 	camera_position_c = cam_temp;
       }
     }
     if(g_KeyS_Pressed){
       cam_temp += camera_w_vector * speed * delta_t;
-      CheckColisionPointWalls(cam_temp);
-      if(!CheckColisionPointWalls(cam_temp)){
+      CheckCollisionPointWalls(cam_temp);
+      if(!CheckCollisionPointWalls(cam_temp)){
 	camera_position_c = cam_temp;
       }
     }
     if (g_KeyD_Pressed) {
       glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
       cam_temp += (upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
-      CheckColisionPointWalls(cam_temp);
-      if(!CheckColisionPointWalls(cam_temp)){
+      CheckCollisionPointWalls(cam_temp);
+      if(!CheckCollisionPointWalls(cam_temp)){
 	camera_position_c = cam_temp;
       }
     }
     if (g_KeyA_Pressed) {
       glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
       cam_temp += -(upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
-      CheckColisionPointWalls(cam_temp);
-      if(!CheckColisionPointWalls(cam_temp)){
+      CheckCollisionPointWalls(cam_temp);
+      if(!CheckCollisionPointWalls(cam_temp)){
 	camera_position_c = cam_temp;
       }
     }
@@ -362,12 +362,22 @@ int main(int argc, char* argv[]) {
     model = Matrix_Translate(5.0f, 2.5f, 0.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(2.5f, 2.5f, 1.0f);
     DrawObject(model, "the_portal", BLUE_PORTAL);
 
+    if(CheckCollisionPlayerPortal(camera_position_c, model)){
+      printf("Colidiu com o portal azul\n");
+      camera_position_c = Matrix_Translate(0.0f, 0.0f, -5.0f) * camera_position_c;
+    }
+
     glActiveTexture(GL_TEXTURE11);
     glBindTexture(GL_TEXTURE_2D, orangePortalTexture);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"), 11);
 
     model = Matrix_Translate(0.0f, 2.5f, -5.0f) * Matrix_Scale(2.5f, 2.5f, 1.0f);
     DrawObject(model, "the_portal", ORANGE_PORTAL);
+
+    if(CheckCollisionPlayerPortal(camera_position_c, model)){
+      printf("Colidiu com o portal laranja\n");
+      camera_position_c = Matrix_Translate(5.0f, 0.0f, 0.0f) * camera_position_c;
+    }
 
     // Drawing the portal gun
     model = T_view * Matrix_Translate(0.4, -0.3, -0.8) * Matrix_Scale(0.3, 0.3, 0.3);
