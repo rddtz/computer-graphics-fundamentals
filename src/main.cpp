@@ -599,11 +599,17 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       bluePortalRotation = Matrix_Identity();
       bluePortalSeesDirection = SOUTH;
 
+      bluePortalLooksAt = colision_point;
+      bluePortalLooksAt.z += 5.0;
+
       bluePortalPosition = colision_point;
       bluePortalPosition.z += delta_wall;
     } else {
       orangePortalRotation = Matrix_Identity();
       orangePortalSeesDirection = SOUTH;
+
+      orangePortalLooksAt = colision_point;
+      orangePortalLooksAt.z += 5.0;
 
       orangePortalPosition = colision_point;
       orangePortalPosition.z += delta_wall;
@@ -615,11 +621,17 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       bluePortalRotation = Matrix_Rotate_Y(-3.141592f);
       bluePortalSeesDirection = NORTH;
 
+      bluePortalLooksAt = colision_point;
+      bluePortalLooksAt.z -= 5.0;
+
       bluePortalPosition = colision_point;
       bluePortalPosition.z -= delta_wall;
     } else {
       orangePortalRotation = Matrix_Rotate_Y(-3.141592f);
       orangePortalSeesDirection = NORTH;
+
+      orangePortalLooksAt = colision_point;
+      orangePortalLooksAt.z -= 5.0;
 
       orangePortalPosition = colision_point;
       orangePortalPosition.z -= delta_wall;
@@ -631,11 +643,17 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       bluePortalRotation = Matrix_Rotate_Y(3.141592f / 2);
       bluePortalSeesDirection = EAST;
 
+      bluePortalLooksAt = colision_point;
+      bluePortalLooksAt.x += 5.0;
+
       bluePortalPosition = colision_point;
       bluePortalPosition.x += delta_wall;
     } else {
       orangePortalRotation = Matrix_Rotate_Y(3.141592f / 2);
       orangePortalSeesDirection = EAST;
+
+      orangePortalLooksAt = colision_point;
+      orangePortalLooksAt.x += 5.0;
 
       orangePortalPosition = colision_point;
       orangePortalPosition.x += delta_wall;
@@ -647,11 +665,17 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       bluePortalRotation = Matrix_Rotate_Y(-3.141592f / 2);
       bluePortalSeesDirection = WEST;
 
+      bluePortalLooksAt = colision_point;
+      bluePortalLooksAt.x -= 5.0;
+
       bluePortalPosition = colision_point;
       bluePortalPosition.x -= delta_wall;
     } else {
       orangePortalRotation = Matrix_Rotate_Y(-3.141592f / 2);
       orangePortalSeesDirection = WEST;
+
+      orangePortalLooksAt = colision_point;
+      orangePortalLooksAt.x -= 5.0;
 
       orangePortalPosition = colision_point;
       orangePortalPosition.x -= delta_wall;
