@@ -342,13 +342,13 @@ int main(int argc, char* argv[]) {
     }
 
     if(g_LeftMouseButtonPressed){
-      std::cout << CheckCollisionLineToWalls(camera_position_c, camera_view_vector) << "\n";
+      CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
       // get position in the wall
       // spawn portal
     }
 
     if(g_RightMouseButtonPressed){
-      std::cout << CheckCollisionLineToWalls(camera_position_c, camera_view_vector) << "\n";
+      CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
       // get position in the wall
       // spawn portal
     }

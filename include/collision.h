@@ -10,7 +10,8 @@ int CheckCollisionAABBtoAABB(SceneObject obj1, glm::mat4 transf1, SceneObject ob
 int CheckCollisionAABBtoPlane(BoundingBox box, glm::vec4 pn, float pd);
 int CheckCollisionPointWalls(glm::vec4 point);
 int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transform);
-float CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector);
+
+std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector);
 
 BoundingBox GetBboxModel(ObjModel* model, glm::mat4 transformation);
 void SetWallsInfo();
@@ -95,10 +96,11 @@ int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transfor
 
 }
 
-float CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector){
+
+std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector){
 
   float intersection_point = 10000;
-  int ind = 0;
+  glm::vec4 hit_wall_normal;
 
   for(int i = 0; i < N_WALLS; i++){
 
@@ -113,24 +115,28 @@ float CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector
 
       float t = (dotproduct(wall_normal, higher_walls[i].min) - pn) / nd;
       if (t >= 0.0f) {
-	ind = i;
 	intersection_point = std::min(intersection_point, t);
+	hit_wall_normal = wall_normal;
       }
     }
 
   }
 
+  glm::vec4 point;
+
   if(intersection_point == 10000){
-    return -1;
+    return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
   } else{
     glm::vec4 point = camera_position + intersection_point*view_vector;
 
     if(point.y > higher_walls[0].max.y || point.y < -20){
-      return -1;
+      return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
     }
   }
 
-  return intersection_point;
+  std::pair<glm::vec4, glm::vec4> ret = {point, hit_wall_normal};
+
+  return ret;
 
 }
 
@@ -197,9 +203,6 @@ int CheckCollisionPointWalls(glm::vec4 point){
   wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
   wall_normal = GetNormalWall(wall);
   int c4 = CheckCollisionPointToPlane(point, wall_normal, wall.min);
-
-  printf("%d(%f,%f,%f)\n", 4, wall.max.x, wall.max.y, wall.max.z);
-  printf("%d(%f,%f,%f)\n", 4, wall_normal.x, wall_normal.y, wall_normal.z);
 
   /* std::cout << c1 << c2 << c3 << c4 << "\n"; */
   //if at leat one collision, the player cant move
