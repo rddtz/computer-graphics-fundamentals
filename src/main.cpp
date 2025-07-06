@@ -9,7 +9,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
 
 #define SPHERE 0
 #define BUNNY 1
-#define PLANE 2
+#define WALL 2
 #define PORTALGUN 3
 #define FLOOR 4
 #define BLUE_PORTAL 10
@@ -137,14 +137,14 @@ int main(int argc, char* argv[]) {
   glCullFace(GL_BACK);
   glFrontFace(GL_CCW);
 
-  glm::vec4 camera_position_c = glm::vec4(0.0f, 2.0f, 5.0f, 1.0f);
-  float speed = 4.5f;
+  glm::vec4 camera_position_c = glm::vec4(0.0f, 2.5f, 5.0f, 1.0f);
+  float speed = 5.5f;
   float prev_time = (float)glfwGetTime();
 
-  glm::vec4 bluePortalPosition = glm::vec4(1.0f, 1.0f, 5.0f, 1.0f);
+  glm::vec4 bluePortalPosition = glm::vec4(0.0f, 2.0f, 5.0f, 1.0f);
   bool isBluePortalActive = true;
 
-  glm::vec4 orangePortalPosition = glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f);
+  glm::vec4 orangePortalPosition = glm::vec4(5.0f, 2.0f, 0.0f, 1.0f);
   bool isOrangePortalActive = true;
 
   while (!glfwWindowShouldClose(window)) {
@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       glUseProgram(g_GpuProgramID);
 
-      glm::vec4 blue_portal_looking_at = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+      glm::vec4 blue_portal_looking_at = glm::vec4(0.0f, 2.0f, -5.0f, 1.0f);
       glm::vec4 camera_view_vector =
           blue_portal_looking_at - bluePortalPosition;
       glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
@@ -268,9 +268,8 @@ int main(int argc, char* argv[]) {
     glBindTexture(GL_TEXTURE_2D, orangePortalTexture);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"), 11);
 
-    model = Matrix_Translate(0.0f, 2.0f, -5.0f) *
-            Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(2.0f, 1.0f, 4.0f);
-    DrawObject(model, "the_plane", ORANGE_PORTAL);
+    model = Matrix_Translate(0.0f, 2.5f, -5.0f) * Matrix_Scale(2.5f, 2.5f, 1.0f);
+    DrawObject(model, "the_portal", ORANGE_PORTAL);
 
     // Drawing the portal gun
     model = T_view * Matrix_Translate(1, -1, -2) * Matrix_Scale(1, 1, 1);
@@ -310,50 +309,50 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
   // Higher walls
   model =
       Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(-30.0f, 0.0f, 30.0f) *
           Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(30.0f, 0.0f, -30.0f) *
           Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) *
           Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   // Floors
   model = Matrix_Translate(-30.0, 0.0f, -10.0f) *
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(-30.0, -20.0f, 10.0f) *
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(-30.0, 0.0f, 30.0f) *
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   // Lower walls
 
   model = Matrix_Translate(-30.0f, -20.0f, -10.0f) *
           Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(-30.0f, -20.0f, 30.0f) *
           Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(30.0f, -20.0f, -30.0f) *
           Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) *
           Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 }
 
 void LoadTextures() {
