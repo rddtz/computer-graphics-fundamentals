@@ -23,6 +23,9 @@ uniform mat4 projection;
 #define BUNNY  1
 #define PLANE  2
 #define PORTALGUN 3
+#define FLOOR 4
+#define BLUE_PORTAL 10
+#define ORANGE_PORTAL 11
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -34,6 +37,7 @@ uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
 uniform sampler2D TextureImage3;
+uniform sampler2D OrangePortalTexture;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -120,13 +124,13 @@ void main()
         U = (position_model.x - minx) / (maxx - minx);
         V = (position_model.y - miny) / (maxy - miny);
     }
-    else if ( object_id == PLANE )
+    else if ( object_id == PLANE || object_id == FLOOR || object_id == BLUE_PORTAL || object_id == ORANGE_PORTAL)
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
         U = texcoords.x;
         V = texcoords.y;
     }
-       else if ( object_id == PORTALGUN )
+       else if ( object_id == PORTALGUN)
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
         U = texcoords.x;
@@ -142,17 +146,23 @@ void main()
 
     vec3 Kd3 = texture(TextureImage3, vec2(U,V)).rgb;
 
+    vec3 Kd10 = texture(OrangePortalTexture, vec2(U,V)).rgb;
+
     float lambert = max(0,dot(n,l));
 
 
-    if (!(object_id == PLANE)){
+    if ((object_id == BUNNY) || (object_id == SPHERE)){
         // Equação de Iluminação
         //          *** Cor da Terra         *** Luzes noturnas
         color.rgb = Kd0 * (lambert + 0.01) + Kd1 * max(0,(1 - lambert * 4));
     } else if (object_id == PORTALGUN){
         color.rgb = Kd3;
-    } else {
-    color.rgb = Kd2;
+    } else if(object_id == BLUE_PORTAL || object_id == ORANGE_PORTAL){
+        color.rgb = Kd10;  
+    } else if (object_id == PLANE){
+        color.rgb = Kd2;
+    } else{
+        color.rgb = Kd10;
     }
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:
