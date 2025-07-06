@@ -135,13 +135,14 @@ std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_posit
   if(intersection_point == 10000){
     return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
   } else{
-    glm::vec4 point = camera_position + intersection_point*view_vector;
+    point = camera_position + intersection_point*view_vector;
 
     if(point.y > higher_walls[0].max.y || point.y < -20){
       return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
     }
   }
 
+  printf("%f %f %f\n", point.x, point.y, point.z);
   std::pair<glm::vec4, glm::vec4> ret = {point, hit_wall_normal};
 
   return ret;
