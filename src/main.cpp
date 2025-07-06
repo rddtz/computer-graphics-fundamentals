@@ -13,8 +13,8 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
 void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
                         int portal_color);
 
-void DrawCrossair(glm::mat4 view, glm::vec4 camera, float nearplane, float farplane);
-
+void DrawCrossair(glm::mat4 view, glm::vec4 camera, float nearplane,
+                  float farplane);
 
 #define SPHERE 0
 #define BUNNY 1
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
   window = glfwCreateWindow(
       1920, 1080, "INF01047 - Trabalho Final Rayan e Gabriel Henrique",
       glfwGetPrimaryMonitor(), NULL);
-  
+
   if (!window) {
     glfwTerminate();
     fprintf(stderr, "ERROR: glfwCreateWindow() failed.\n");
@@ -197,8 +197,9 @@ int main(int argc, char* argv[]) {
   while (!glfwWindowShouldClose(window)) {
     glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
 
-    if(g_MiddleMouseButtonPressed){
-        UpdatePortalPosition(glm::vec4(15.0f,3.0f,30.0f,1.0f),glm::vec4(0.0f,0.0f,-1.0f,0.0f),ORANGE_PORTAL);
+    if (g_MiddleMouseButtonPressed) {
+      UpdatePortalPosition(glm::vec4(15.0f, 3.0f, 30.0f, 1.0f),
+                           glm::vec4(0.0f, 0.0f, -1.0f, 0.0f), ORANGE_PORTAL);
     }
 
     float nearplane = -0.5f;
@@ -282,7 +283,6 @@ int main(int argc, char* argv[]) {
                                camera_position_c.z);
       DrawObject(model, "the_bunny", BUNNY);
 
-
     } else {
       // Texturas dos portais nulas
     }
@@ -312,8 +312,8 @@ int main(int argc, char* argv[]) {
         -(camera_view_vector / norm(camera_view_vector));
     camera_w_vector.y = 0;
 
-
-    //  -=-=-=-=-=-=-=-=-=-=-=-=-=- USER INPUT HANDLING -=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //  -=-=-=-=-=-=-=-=-=-=-=-=-=- USER INPUT HANDLING
+    //  -=-=-=-=-=-=-=-=-=-=-=-=-=-
     glm::vec4 cam_temp = camera_position_c;
 
     if (g_KeyW_Pressed) {
@@ -346,16 +346,29 @@ int main(int argc, char* argv[]) {
       }
     }
 
-    if(g_LeftMouseButtonPressed){
-      CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
-      // get position in the wall
-      // spawn portal
+    if (g_LeftMouseButtonPressed) {
+      std::pair<glm::vec4, glm::vec4> collisionResult =
+          CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
+      printf("POINT x: %f y: %f z: %f \n", collisionResult.first.x,
+             collisionResult.first.y, collisionResult.first.z);
+      printf("NORMAL x: %f y: %f z: %f \n", collisionResult.second.x,
+             collisionResult.second.y, collisionResult.second.z);
+
+      UpdatePortalPosition(collisionResult.first, collisionResult.second,
+                           BLUE_PORTAL);
     }
 
-    if(g_RightMouseButtonPressed){
-      CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
-      // get position in the wall
-      // spawn portal
+    if (g_RightMouseButtonPressed) {
+      std::pair<glm::vec4, glm::vec4> collisionResult =
+          CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
+
+      printf("POINT x: %f y: %f z: %f \n", collisionResult.first.x,
+             collisionResult.first.y, collisionResult.first.z);
+      printf("NORMAL x: %f y: %f z: %f \n", collisionResult.second.x,
+             collisionResult.second.y, collisionResult.second.z);
+
+      UpdatePortalPosition(collisionResult.first, collisionResult.second,
+                           ORANGE_PORTAL);
     }
 
     //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -385,9 +398,10 @@ int main(int argc, char* argv[]) {
     glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"), 10);
 
-    glm::mat4 modelBluePortal = Matrix_Translate(bluePortalPosition.x, bluePortalPosition.y, bluePortalPosition.z) *
-                                bluePortalRotation *
-                                Matrix_Scale(2.5f, 2.5f, 1.0f);
+    glm::mat4 modelBluePortal =
+        Matrix_Translate(bluePortalPosition.x, bluePortalPosition.y,
+                         bluePortalPosition.z) *
+        bluePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
     DrawObject(modelBluePortal, "the_portal", BLUE_PORTAL);
 
     glActiveTexture(GL_TEXTURE11);
@@ -395,9 +409,10 @@ int main(int argc, char* argv[]) {
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"),
                 11);
 
-    glm::mat4 modelOrangePortal = Matrix_Translate(orangePortalPosition.x, orangePortalPosition.y, orangePortalPosition.z) *
-                                  orangePortalRotation *
-                                  Matrix_Scale(2.5f, 2.5f, 1.0f);
+    glm::mat4 modelOrangePortal =
+        Matrix_Translate(orangePortalPosition.x, orangePortalPosition.y,
+                         orangePortalPosition.z) *
+        orangePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
     DrawObject(modelOrangePortal, "the_portal", ORANGE_PORTAL);
 
     if (CheckCollisionPlayerPortal(camera_position_c, modelBluePortal)) {
@@ -415,9 +430,9 @@ int main(int argc, char* argv[]) {
                       Matrix_Scale(0.3, 0.3, 0.3);
     DrawObject(model, "PortalGun", PORTALGUN);
 
-    model = T_view * Matrix_Translate(0.0, 0.0, -2.5) * Matrix_Scale(0.05, 0.05, 0.05);
+    model = T_view * Matrix_Translate(0.0, 0.0, -2.5) *
+            Matrix_Scale(0.05, 0.05, 0.05);
     DrawObject(model, "the_sphere", SPHERE);
-
 
     TextRendering_ShowFramesPerSecond(window);
 
@@ -557,8 +572,6 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
   model = Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) *
           Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
-
-
 }
 
 void LoadTextures() {
@@ -569,7 +582,6 @@ void LoadTextures() {
 }
 
 void DrawObject(glm::mat4 model, const char* name, int id) {
-
   glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
   glUniform1i(g_object_id_uniform, id);
   DrawVirtualObject(name);
@@ -646,8 +658,8 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
   }
 }
 
-void DrawCrossair(glm::mat4 view, glm::vec4 camera, float nearplane, float farplane){
-
+void DrawCrossair(glm::mat4 view, glm::vec4 camera, float nearplane,
+                  float farplane) {
   float t = 1.5f * g_CameraDistance / 2.5f;
   float b = -t;
   float r = t * g_ScreenRatio;
@@ -656,6 +668,5 @@ void DrawCrossair(glm::mat4 view, glm::vec4 camera, float nearplane, float farpl
 
   glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
   glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
-		     glm::value_ptr(projection));
-
+                     glm::value_ptr(projection));
 }
