@@ -5,7 +5,7 @@
 
 glm::vec4 GetNormalWall(BoundingBox wall);
 
-int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane);
+int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane, float offset);
 int CheckCollisionAABBtoAABB(SceneObject obj1, glm::mat4 transf1, SceneObject obj2, glm::mat4 transf2);
 int CheckCollisionAABBtoPlane(BoundingBox box, glm::vec4 pn, float pd);
 int CheckCollisionPointWalls(glm::vec4 point);
@@ -82,13 +82,21 @@ int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transfor
 
   // Portal can only be aligned with z axis or x axis because we can't have portals in the floor or ceil
   if(abs(portal_normal.x) > 0.01f){ // normal is x, portal is aligned with z
-    if(player_point.z <= portal.max.z && player_point.z >= portal.min.z){
-      return CheckCollisionPointToPlane(player_point, portal_normal, (portal.max + portal.min)/2.0f);
-    }
 
+    float maxz = std::max(portal.max.z, portal.min.z);
+    float minz = std::min(portal.max.z, portal.min.z);
+
+    if(player_point.z <= maxz && player_point.z >= minz){
+      printf("Validou o Z quando entrou no X");
+      return CheckCollisionPointToPlane(player_point, portal_normal, (portal.max + portal.min)/2.0f, 1.1);
+    }
   } else { // normal is z, portal is aligned with x
-    if(player_point.x <= portal.max.x && player_point.x >= portal.min.x){
-      return CheckCollisionPointToPlane(player_point, portal_normal, (portal.max + portal.min)/2.0f);
+
+    float maxx = std::max(portal.max.x, portal.min.x);
+    float minx = std::min(portal.max.x, portal.min.x);
+
+    if(player_point.x <= maxx && player_point.x >= minx){
+      return CheckCollisionPointToPlane(player_point, portal_normal, (portal.max + portal.min)/2.0f, 1.1);
     }
   }
 
@@ -140,10 +148,10 @@ std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_posit
 
 }
 
-int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane){
+int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane, float offset){
 
   //                    moving the point to not enter in the wall
-  glm::vec4 v = point - (point_in_plane + (pn/norm(pn))*1.1f);
+  glm::vec4 v = point - (point_in_plane + (pn/norm(pn))*offset);
 
   float d = dotproduct(pn, v);
 
@@ -183,26 +191,26 @@ int CheckCollisionPointWalls(glm::vec4 point){
   glm::mat4 wallModel = Matrix_Translate(-30.0f, 0.0f, -30.0f) * wallDefault;
   BoundingBox wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
   glm::vec4 wall_normal = GetNormalWall(wall);
-  int c1 = CheckCollisionPointToPlane(point, wall_normal, wall.min);
+  int c1 = CheckCollisionPointToPlane(point, wall_normal, wall.min, 1.1);
 
   // Testing for the second wall
   wallModel = Matrix_Translate(-30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * wallDefault;
   wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
   wall_normal = GetNormalWall(wall);
-  int c2 = CheckCollisionPointToPlane(point, wall_normal, wall.min);
+  int c2 = CheckCollisionPointToPlane(point, wall_normal, wall.min, 1.1);
 
   // Testing for the third wall
   wallModel = Matrix_Translate(30.0f, 0.0f, -30.0f) *  Matrix_Rotate_Y(-3.141592f / 2) *  wallDefault;
   wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
   wall_normal = GetNormalWall(wall);
-  int c3 = CheckCollisionPointToPlane(point, wall_normal, wall.min);
+  int c3 = CheckCollisionPointToPlane(point, wall_normal, wall.min, 1.1);
 
 
   // Testing for the forth wall
   wallModel =  Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) * wallDefault;
   wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
   wall_normal = GetNormalWall(wall);
-  int c4 = CheckCollisionPointToPlane(point, wall_normal, wall.min);
+  int c4 = CheckCollisionPointToPlane(point, wall_normal, wall.min, 1.1);
 
   /* std::cout << c1 << c2 << c3 << c4 << "\n"; */
   //if at leat one collision, the player cant move
