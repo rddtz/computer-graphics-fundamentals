@@ -61,6 +61,7 @@ int main(int argc, char* argv[]) {
   window = glfwCreateWindow(
       1920, 1080, "INF01047 - Trabalho Final Rayan e Gabriel Henrique",
       glfwGetPrimaryMonitor(), NULL);
+  
   if (!window) {
     glfwTerminate();
     fprintf(stderr, "ERROR: glfwCreateWindow() failed.\n");
@@ -192,6 +193,13 @@ int main(int argc, char* argv[]) {
   while (!glfwWindowShouldClose(window)) {
     glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
 
+    if(g_MiddleMouseButtonPressed){
+        UpdatePortalPosition(glm::vec4(15.0f,3.0f,30.0f,1.0f),glm::vec4(0.0f,0.0f,-1.0f,0.0f),ORANGE_PORTAL);
+    }
+
+    float nearplane = -0.5f;
+    float farplane = -85.0f;
+
     if (isBluePortalActive && isOrangePortalActive) {
       // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
       glBindFramebuffer(GL_FRAMEBUFFER, bluePortalViewFramebuffer);
@@ -208,9 +216,6 @@ int main(int argc, char* argv[]) {
           bluePortalPosition, camera_view_vector, camera_up_vector);
 
       glm::mat4 projection;
-
-      float nearplane = -0.1f;
-      float farplane = -70.0f;
 
       if (g_UsePerspectiveProjection) {
         float field_of_view = 3.141592 / 3.0f;
@@ -341,9 +346,6 @@ int main(int argc, char* argv[]) {
 
     glm::mat4 projection;
 
-    float nearplane = -0.5f;
-    float farplane = -85.0f;
-
     if (g_UsePerspectiveProjection) {
       float field_of_view = 3.141592 / 3.0f;
       projection =
@@ -362,7 +364,7 @@ int main(int argc, char* argv[]) {
     glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"), 10);
 
-    glm::mat4 modelBluePortal = Matrix_Translate(5.0f, 2.5f, 0.0f) *
+    glm::mat4 modelBluePortal = Matrix_Translate(bluePortalPosition.x, bluePortalPosition.y, bluePortalPosition.z) *
                                 bluePortalRotation *
                                 Matrix_Scale(2.5f, 2.5f, 1.0f);
     DrawObject(modelBluePortal, "the_portal", BLUE_PORTAL);
@@ -372,7 +374,7 @@ int main(int argc, char* argv[]) {
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"),
                 11);
 
-    glm::mat4 modelOrangePortal = Matrix_Translate(0.0f, 2.5f, -5.0f) *
+    glm::mat4 modelOrangePortal = Matrix_Translate(orangePortalPosition.x, orangePortalPosition.y, orangePortalPosition.z) *
                                   orangePortalRotation *
                                   Matrix_Scale(2.5f, 2.5f, 1.0f);
     DrawObject(modelOrangePortal, "the_portal", ORANGE_PORTAL);
@@ -552,9 +554,9 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
   float normal_x = surface_normal.x;
   float normal_z = surface_normal.z;
 
-  const float delta_wall = 0.01;
+  const float delta_wall = 0.05;
 
-  if (normal_z < -1e-6f) {
+  if (normal_z > 1e-6f) {
     if (portal_color == BLUE_PORTAL) {
       bluePortalRotation = Matrix_Identity();
       bluePortalSeesDirection = SOUTH;
@@ -570,12 +572,11 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
     }
   }
 
-  if (normal_z > 1e-6f) {
+  if (normal_z < -1e-6f) {
     if (portal_color == BLUE_PORTAL) {
       bluePortalRotation = Matrix_Rotate_Y(-3.141592f);
       bluePortalSeesDirection = NORTH;
 
-      bluePortalPosition = colision_point;
       bluePortalPosition.z -= delta_wall;
     } else {
       orangePortalRotation = Matrix_Rotate_Y(-3.141592f);
@@ -586,7 +587,7 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
     }
   }
 
-  if (normal_x < -1e-6f) {
+  if (normal_x > 1e-6f) {
     if (portal_color == BLUE_PORTAL) {
       bluePortalRotation = Matrix_Rotate_Y(3.141592f / 2);
       bluePortalSeesDirection = EAST;
@@ -602,7 +603,7 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
     }
   }
 
-  if (normal_x > 1e-6f) {
+  if (normal_x < -1e-6f) {
     if (portal_color == BLUE_PORTAL) {
       bluePortalRotation = Matrix_Rotate_Y(-3.141592f / 2);
       bluePortalSeesDirection = WEST;
