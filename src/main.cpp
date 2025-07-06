@@ -7,6 +7,7 @@ void DrawObject(glm::mat4 model, const char* name,
                 int id);  // Function to draw the object in the screen
 void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
                   GLuint orangePortalTexture);
+void MovePlayerToPortal(glm::vec4 *camera, glm::mat4 portal_transform);
 
 #define SPHERE 0
 #define BUNNY 1
@@ -364,7 +365,7 @@ int main(int argc, char* argv[]) {
 
     if(CheckCollisionPlayerPortal(camera_position_c, model)){
       printf("Colidiu com o portal azul\n");
-      camera_position_c = Matrix_Translate(0.0f, 0.0f, -5.0f) * camera_position_c;
+      MovePlayerToPortal(&camera_position_c, Matrix_Translate(0.0f, 2.5f, -5.0f) * Matrix_Scale(2.5f, 2.5f, 1.0f));
     }
 
     glActiveTexture(GL_TEXTURE11);
@@ -376,7 +377,7 @@ int main(int argc, char* argv[]) {
 
     if(CheckCollisionPlayerPortal(camera_position_c, model)){
       printf("Colidiu com o portal laranja\n");
-      camera_position_c = Matrix_Translate(5.0f, 0.0f, 0.0f) * camera_position_c;
+      MovePlayerToPortal(&camera_position_c, Matrix_Translate(5.0f, 2.5f, 0.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(2.5f, 2.5f, 1.0f));
     }
 
     // Drawing the portal gun
@@ -393,6 +394,22 @@ int main(int argc, char* argv[]) {
   glfwTerminate();
 
   return 0;
+}
+
+void MovePlayerToPortal(glm::vec4 *camera, glm::mat4 portal_transform){
+
+  BoundingBox portalPoints = {glm::vec4(g_VirtualScene["the_portal"].bbox_min.x, g_VirtualScene["the_portal"].bbox_min.y, g_VirtualScene["the_portal"].bbox_min.z, 1),
+			      glm::vec4(g_VirtualScene["the_portal"].bbox_max.x, g_VirtualScene["the_portal"].bbox_max.y, g_VirtualScene["the_portal"].bbox_max.z, 1)};
+
+  BoundingBox portal = {portal_transform * portalPoints.min, portal_transform * portalPoints.max};
+
+  glm::vec4 portal_normal = GetNormalWall(portal);
+
+  glm::vec4 new_position = glm::vec4((portal.max.x + portal.min.x)/2.0f, camera->y, (portal.max.z + portal.min.z)/2.0f, 1.0f);
+
+  *camera = new_position + 2.0f*(portal_normal/norm(portal_normal));
+  // return new_position;
+
 }
 
 void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
