@@ -10,7 +10,8 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
                                                 // without the portals
 void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
                           int portal_color);
-void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform);
+void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
+                        int portal_color);
 
 #define SPHERE 0
 #define BUNNY 1
@@ -21,12 +22,21 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform);
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
 
+#define NORTH 0
+#define SOUTH 1
+#define EAST 2
+#define WEST 3
+
 glm::vec4 bluePortalPosition = glm::vec4(5.0f, 2.0f, 0.0f, 1.0f);
 glm::mat4 bluePortalRotation = Matrix_Identity();
+glm::vec4 bluePortalLooksAt = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
+int bluePortalSeesDirection = SOUTH;
 bool isBluePortalActive = true;
 
 glm::vec4 orangePortalPosition = glm::vec4(0.0f, 2.0f, -5.0f, 1.0f);
 glm::mat4 orangePortalRotation = Matrix_Identity();
+glm::vec4 orangePortalLooksAt = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
+int orangePortalSeesDirection = SOUTH;
 bool isOrangePortalActive = true;
 
 int main(int argc, char* argv[]) {
@@ -189,14 +199,8 @@ int main(int argc, char* argv[]) {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       glUseProgram(g_GpuProgramID);
 
-      glm::vec4 blue_portal_looking_at = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
-      glm::vec4 camera_view_vector =
-          blue_portal_looking_at - bluePortalPosition;
+      glm::vec4 camera_view_vector = bluePortalLooksAt - bluePortalPosition;
       glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-
-      glm::vec4 camera_w_vector =
-          -(camera_view_vector / norm(camera_view_vector));
-      camera_w_vector.y = 0;
 
       glm::mat4 view = Matrix_Camera_View(bluePortalPosition,
                                           camera_view_vector, camera_up_vector);
@@ -238,11 +242,7 @@ int main(int argc, char* argv[]) {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       glUseProgram(g_GpuProgramID);
 
-      glm::vec4 orange_portal_looking_at = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
-      camera_view_vector = orange_portal_looking_at - orangePortalPosition;
-
-      camera_w_vector = -(camera_view_vector / norm(camera_view_vector));
-      camera_w_vector.y = 0;
+      camera_view_vector = orangePortalLooksAt - orangePortalPosition;
 
       view = Matrix_Camera_View(orangePortalPosition, camera_view_vector,
                                 camera_up_vector);
@@ -379,17 +379,17 @@ int main(int argc, char* argv[]) {
 
     if (CheckCollisionPlayerPortal(camera_position_c, modelBluePortal)) {
       printf("Colidiu com o portal azul\n");
-      MovePlayerToPortal(&camera_position_c, modelOrangePortal);
+      MovePlayerToPortal(&camera_position_c, modelOrangePortal, ORANGE_PORTAL);
     }
 
     if (CheckCollisionPlayerPortal(camera_position_c, modelOrangePortal)) {
       printf("Colidiu com o portal laranja\n");
-      MovePlayerToPortal(&camera_position_c, modelBluePortal);
+      MovePlayerToPortal(&camera_position_c, modelBluePortal, BLUE_PORTAL);
     }
 
     // Drawing the portal gun
     glm::mat4 model = T_view * Matrix_Translate(0.4, -0.3, -0.8) *
-            Matrix_Scale(0.3, 0.3, 0.3);
+                      Matrix_Scale(0.3, 0.3, 0.3);
     DrawObject(model, "PortalGun", PORTALGUN);
 
     TextRendering_ShowFramesPerSecond(window);
@@ -404,7 +404,8 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
-void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform) {
+void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
+                        int portal_color) {
   BoundingBox portalPoints = {
       glm::vec4(g_VirtualScene["the_portal"].bbox_min.x,
                 g_VirtualScene["the_portal"].bbox_min.y,
@@ -424,8 +425,45 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform) {
 
   *camera = new_position + 2.0f * (portal_normal / norm(portal_normal));
   // return new_position;
-}
 
+  if (portal_color == BLUE_PORTAL) {
+    switch (bluePortalSeesDirection) {
+      case NORTH:
+        g_CameraTheta = 3.141592;
+        break;
+
+      case SOUTH:
+        g_CameraTheta = 0;
+        break;
+
+      case EAST:
+        g_CameraTheta = 3.141592 / 2;
+        break;
+
+      case WEST:
+        g_CameraTheta = -3.141592 / 2;
+        break;
+    }
+  } else {
+    switch (orangePortalSeesDirection) {
+      case NORTH:
+        g_CameraTheta = 3.141592;
+        break;
+
+      case SOUTH:
+        g_CameraTheta = 0;
+        break;
+
+      case EAST:
+        g_CameraTheta = 3.141592 / 2;
+        break;
+
+      case WEST:
+        g_CameraTheta = -3.141592 / 2;
+        break;
+    }
+  }
+}
 void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
                   GLuint orangePortalTexture) {
   glm::mat4 model = Matrix_Identity();
@@ -516,14 +554,16 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
 
   const float delta_wall = 0.01;
 
-  if (normal_z < 1e-6f) {
+  if (normal_z < -1e-6f) {
     if (portal_color == BLUE_PORTAL) {
       bluePortalRotation = Matrix_Identity();
+      bluePortalSeesDirection = SOUTH;
 
       bluePortalPosition = colision_point;
       bluePortalPosition.z += delta_wall;
     } else {
       orangePortalRotation = Matrix_Identity();
+      orangePortalSeesDirection = SOUTH;
 
       orangePortalPosition = colision_point;
       orangePortalPosition.z += delta_wall;
@@ -533,25 +573,29 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
   if (normal_z > 1e-6f) {
     if (portal_color == BLUE_PORTAL) {
       bluePortalRotation = Matrix_Rotate_Y(-3.141592f);
+      bluePortalSeesDirection = NORTH;
 
       bluePortalPosition = colision_point;
       bluePortalPosition.z -= delta_wall;
     } else {
       orangePortalRotation = Matrix_Rotate_Y(-3.141592f);
+      orangePortalSeesDirection = NORTH;
 
       orangePortalPosition = colision_point;
       orangePortalPosition.z -= delta_wall;
     }
   }
 
-  if (normal_x < 1e-6f) {
+  if (normal_x < -1e-6f) {
     if (portal_color == BLUE_PORTAL) {
       bluePortalRotation = Matrix_Rotate_Y(3.141592f / 2);
+      bluePortalSeesDirection = EAST;
 
       bluePortalPosition = colision_point;
       bluePortalPosition.x += delta_wall;
     } else {
       orangePortalRotation = Matrix_Rotate_Y(3.141592f / 2);
+      orangePortalSeesDirection = EAST;
 
       orangePortalPosition = colision_point;
       orangePortalPosition.x += delta_wall;
@@ -561,11 +605,13 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
   if (normal_x > 1e-6f) {
     if (portal_color == BLUE_PORTAL) {
       bluePortalRotation = Matrix_Rotate_Y(-3.141592f / 2);
+      bluePortalSeesDirection = WEST;
 
       bluePortalPosition = colision_point;
       bluePortalPosition.x -= delta_wall;
     } else {
       orangePortalRotation = Matrix_Rotate_Y(-3.141592f / 2);
+      orangePortalSeesDirection = WEST;
 
       orangePortalPosition = colision_point;
       orangePortalPosition.x -= delta_wall;
