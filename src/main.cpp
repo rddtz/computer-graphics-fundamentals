@@ -10,7 +10,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
 
 #define SPHERE 0
 #define BUNNY 1
-#define PLANE 2
+#define WALL 2
 #define PORTALGUN 3
 #define FLOOR 4
 #define CUBE 5
@@ -101,6 +101,36 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  // Framebuffer for the view from orange portal / blue portal texture
+  // Tutorial from LearnOpenGL
+  GLuint orangePortalViewFramebuffer;
+  glGenFramebuffers(1, &orangePortalViewFramebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, orangePortalViewFramebuffer);
+
+  GLuint bluePortalTexture;
+  glGenTextures(1, &bluePortalTexture);
+  glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB,
+               GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                         bluePortalTexture, 0);
+
+  GLuint orangePortalViewRBO;
+  glGenRenderbuffers(1, &orangePortalViewRBO);
+  glBindRenderbuffer(GL_RENDERBUFFER, orangePortalViewRBO);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH,
+                        SCREEN_HEIGHT);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                            GL_RENDERBUFFER, orangePortalViewRBO);
+
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    printf("orange framebuffer error");
+    return -1;
+  }
+
   printf("GPU: %s, %s, OpenGL %s, GLSL %s\n", vendor, renderer, glversion,
          glslversion);
 
@@ -126,10 +156,6 @@ int main(int argc, char* argv[]) {
   ObjModel wallmodel("../../data/wall.obj");
   BuildTrianglesAndAddToVirtualScene(&wallmodel);
 
-  ObjModel cube("../../data/the_cube.obj");
-  ComputeNormals(&cube);
-  BuildTrianglesAndAddToVirtualScene(&cube);
-
   if (argc > 1) {
     ObjModel model(argv[1]);
     BuildTrianglesAndAddToVirtualScene(&model);
@@ -143,27 +169,27 @@ int main(int argc, char* argv[]) {
   glCullFace(GL_BACK);
   glFrontFace(GL_CCW);
 
-  glm::vec4 camera_position_c = glm::vec4(0.0f, 2.0f, 5.0f, 1.0f);
-  float speed = 4.5f;
+  glm::vec4 camera_position_c = glm::vec4(0.0f, 2.5f, 5.0f, 1.0f);
+  float speed = 5.5f;
   float prev_time = (float)glfwGetTime();
 
-  glm::vec4 bluePortalPosition = glm::vec4(1.0f, 1.0f, 5.0f, 1.0f);
+  glm::vec4 bluePortalPosition = glm::vec4(5.0f, 2.0f, 0.0f, 1.0f);
   bool isBluePortalActive = true;
 
-  glm::vec4 orangePortalPosition = glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f);
+  glm::vec4 orangePortalPosition = glm::vec4(0.0f, 2.0f, -5.0f, 1.0f);
   bool isOrangePortalActive = true;
 
   while (!glfwWindowShouldClose(window)) {
+    glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+
     if (isBluePortalActive && isOrangePortalActive) {
       // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
       glBindFramebuffer(GL_FRAMEBUFFER, bluePortalViewFramebuffer);
       glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
       glUseProgram(g_GpuProgramID);
 
-      glm::vec4 blue_portal_looking_at = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+      glm::vec4 blue_portal_looking_at = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
       glm::vec4 camera_view_vector =
           blue_portal_looking_at - bluePortalPosition;
       glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
@@ -201,6 +227,46 @@ int main(int argc, char* argv[]) {
                          glm::value_ptr(projection));
 
       sceneObjects(view, projection, T_view, orangePortalTexture);
+
+
+      // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
+      glBindFramebuffer(GL_FRAMEBUFFER, orangePortalViewFramebuffer);
+      glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glUseProgram(g_GpuProgramID);
+
+      glm::vec4 orange_portal_looking_at = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
+      camera_view_vector =
+          orange_portal_looking_at - orangePortalPosition;
+
+      camera_w_vector =
+          -(camera_view_vector / norm(camera_view_vector));
+      camera_w_vector.y = 0;
+
+      view = Matrix_Camera_View(orangePortalPosition,
+                                          camera_view_vector, camera_up_vector);
+      T_view = T_Matrix_Camera_View(
+          orangePortalPosition, camera_view_vector, camera_up_vector);
+
+      if (g_UsePerspectiveProjection) {
+        float field_of_view = 3.141592 / 3.0f;
+        projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane,
+                                        farplane);
+      } else {
+        float t = 1.5f * g_CameraDistance / 2.5f;
+        float b = -t;
+        float r = t * g_ScreenRatio;
+        float l = -r;
+        projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
+      }
+
+      model = Matrix_Identity();
+
+      glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
+      glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
+                         glm::value_ptr(projection));
+
+      sceneObjects(view, projection, T_view, orangePortalTexture);
     } else {
       // Texturas dos portais nulas
     }
@@ -219,7 +285,8 @@ int main(int argc, char* argv[]) {
     float x = r * cos(g_CameraPhi) * sin(g_CameraTheta);
 
     glm::vec4 camera_view_vector = glm::vec4(x, y, z, 0.0f);
-    glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    //    glm::vec4
+    camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
 
     float current_time = (float)glfwGetTime();
     float delta_t = current_time - prev_time;
@@ -234,33 +301,32 @@ int main(int argc, char* argv[]) {
 
     if(g_KeyW_Pressed){
       cam_temp += -camera_w_vector * speed * delta_t;
-      CheckColisionPointWalls(cam_temp);
-      // if(!CheckColisionPointWalls(cam_temp)){
+      if(!CheckColisionPointWalls(cam_temp)){
 	camera_position_c = cam_temp;
-      // }
+      }
     }
     if(g_KeyS_Pressed){
       cam_temp += camera_w_vector * speed * delta_t;
       CheckColisionPointWalls(cam_temp);
-      // if(!CheckColisionPointWalls(cam_temp)){
+      if(!CheckColisionPointWalls(cam_temp)){
 	camera_position_c = cam_temp;
-	// {
+      }
     }
-    if(g_KeyD_Pressed ){
+    if (g_KeyD_Pressed) {
       glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
       cam_temp += (upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
       CheckColisionPointWalls(cam_temp);
-      // if(!CheckColisionPointWalls(cam_temp)){
+      if(!CheckColisionPointWalls(cam_temp)){
 	camera_position_c = cam_temp;
-      // }
+      }
     }
-    if(g_KeyA_Pressed){
+    if (g_KeyA_Pressed) {
       glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
       cam_temp += -(upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
       CheckColisionPointWalls(cam_temp);
-      // if(!CheckColisionPointWalls(cam_temp)){
+      if(!CheckColisionPointWalls(cam_temp)){
 	camera_position_c = cam_temp;
-      // }
+      }
     }
 
     glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector,
@@ -289,16 +355,22 @@ int main(int argc, char* argv[]) {
 
     glm::mat4 model = Matrix_Identity();
 
+    glActiveTexture(GL_TEXTURE10);
+    glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"), 10);
+
+    model = Matrix_Translate(5.0f, 2.5f, 0.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(2.5f, 2.5f, 1.0f);
+    DrawObject(model, "the_portal", BLUE_PORTAL);
+
     glActiveTexture(GL_TEXTURE11);
     glBindTexture(GL_TEXTURE_2D, orangePortalTexture);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"), 11);
 
-    model = Matrix_Translate(0.0f, 2.0f, -5.0f) *
-            Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(2.0f, 1.0f, 4.0f);
-    DrawObject(model, "the_plane", ORANGE_PORTAL);
+    model = Matrix_Translate(0.0f, 2.5f, -5.0f) * Matrix_Scale(2.5f, 2.5f, 1.0f);
+    DrawObject(model, "the_portal", ORANGE_PORTAL);
 
     // Drawing the portal gun
-    model = T_view * Matrix_Translate(1, -1, -2) * Matrix_Scale(1, 1, 1);
+    model = T_view * Matrix_Translate(0.4, -0.3, -0.8) * Matrix_Scale(0.3, 0.3, 0.3);
     DrawObject(model, "PortalGun", PORTALGUN);
 
     TextRendering_ShowFramesPerSecond(window);
@@ -333,51 +405,52 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
   DrawObject(model, "the_bunny", BUNNY);
 
   // Higher walls
-  model = Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  model =
+      Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(-30.0f, 0.0f, 30.0f) *
           Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(30.0f, 0.0f, -30.0f) *
           Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) *
           Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   // Floors
   model = Matrix_Translate(-30.0, 0.0f, -10.0f) *
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(-30.0, -20.0f, 10.0f) *
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(-30.0, 0.0f, 30.0f) *
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   // Lower walls
 
   model = Matrix_Translate(-30.0f, -20.0f, -10.0f) *
           Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(-30.0f, -20.0f, 30.0f) *
           Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(30.0f, -20.0f, -30.0f) *
           Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) *
           Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", PLANE);
+  DrawObject(model, "the_wall", WALL);
 }
 
 void LoadTextures() {
@@ -385,7 +458,6 @@ void LoadTextures() {
   LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif");
   LoadTextureImage("../../data/portalwall.png");
   LoadTextureImage("../../textures/portalgun/textures/portalgun_col.jpg");
-
 }
 
 void DrawObject(glm::mat4 model, const char* name, int id) {

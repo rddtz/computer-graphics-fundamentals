@@ -46,7 +46,7 @@ int CheckColisionAABBtoPlane(BoundingBox box, glm::vec4 pn, float pd){
 int CheckColisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane){
 
   //                    moving the point to not enter in the wall
-  glm::vec4 v = point - (point_in_plane + 0.001f*pn);
+  glm::vec4 v = point - (point_in_plane + (pn/norm(pn))*1.1f);
 
   float d = dotproduct(pn, v);
 
