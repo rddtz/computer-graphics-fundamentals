@@ -1,8 +1,10 @@
 #ifndef _COLLISIONS_H
 #define _COLLISIONS_H
 
-#include "configs.h"
+#define NORMAL 0
+#define FLIPPED 1
 
+#include "configs.h"
 
 int CheckColisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane);
 int CheckColisionAABBtoAABB(SceneObject obj1, glm::mat4 transf1, SceneObject obj2, glm::mat4 transf2);
@@ -10,22 +12,6 @@ int CheckColisionAABBtoPlane(BoundingBox box, glm::vec4 pn, float pd);
 int CheckColisionPointWalls(glm::vec4 point);
 
 BoundingBox GetBboxModel(ObjModel* model, glm::mat4 transformation);
-
-
-int CheckColisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane){
-
-  //                    moving the point to not enter in the wall
-  glm::vec4 v = point - (point_in_plane + 0.001f*pn);
-
-  float d = dotproduct(pn, v);
-
-  if(d > 0.01f){
-    return 0;
-  }
-
-  return 1;
-
-}
 
 int CheckColisionAABBtoAABB(SceneObject obj1, glm::mat4 transf1, SceneObject obj2, glm::mat4 transf2){
 
@@ -57,53 +43,70 @@ int CheckColisionAABBtoPlane(BoundingBox box, glm::vec4 pn, float pd){
 }
 
 
+int CheckColisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane){
+
+  //                    moving the point to not enter in the wall
+  glm::vec4 v = point - (point_in_plane + 0.001f*pn);
+
+  float d = dotproduct(pn, v);
+
+  if(d > 0.01f){
+    return 0;
+  }
+
+  return 1;
+
+}
+
+glm::vec4 GetNormalWall(BoundingBox wall, int flip){
+
+  glm::vec4 wall_normal;
+
+  if(!flip){
+    wall_normal = -crossproduct(glm::vec4(wall.min.x, wall.max.y, wall.max.z, 1) - wall.max,
+				glm::vec4(wall.min.x, wall.max.y, wall.max.z, 1) - wall.min);
+  } else {
+    wall_normal = -crossproduct(glm::vec4(wall.max.x, wall.max.y, wall.min.z, 1) - wall.max,
+				glm::vec4(wall.max.x, wall.max.y, wall.min.z, 1) - wall.min);
+  }
+
+  return wall_normal;
+
+}
+
 int CheckColisionPointWalls(glm::vec4 point){
 
-  BoundingBox wallPoints = {glm::vec4(g_VirtualScene["the_plane"].bbox_min.x, g_VirtualScene["the_plane"].bbox_min.y, g_VirtualScene["the_plane"].bbox_min.z, 1),
-			    glm::vec4(g_VirtualScene["the_plane"].bbox_max.x, g_VirtualScene["the_plane"].bbox_max.y, g_VirtualScene["the_plane"].bbox_max.z, 1)};
+  BoundingBox wallPoints = {glm::vec4(g_VirtualScene["the_wall"].bbox_min.x, g_VirtualScene["the_wall"].bbox_min.y, g_VirtualScene["the_wall"].bbox_min.z, 1),
+			    glm::vec4(g_VirtualScene["the_wall"].bbox_max.x, g_VirtualScene["the_wall"].bbox_max.y, g_VirtualScene["the_wall"].bbox_max.z, 1)};
 
-  glm::mat4 wallDefault = Matrix_Rotate_X(3.141592f /2) * Matrix_Scale(10.0f, 1.0f, 10.0f);
-
+  glm::mat4 wallDefault = Matrix_Scale(10.0f, 10.0f, 0.0f);
 
   // Testing for the first wall
-  glm::mat4 wallModel = Matrix_Translate(0.0f,3.9f,-10.0f) * wallDefault;
+  glm::mat4 wallModel = Matrix_Translate(-30.0f, 0.0f, -30.0f) * wallDefault;
   BoundingBox wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
-
-  glm::vec4 wall_normal = crossproduct(glm::vec4(wall.min.x, wall.max.y, wall.max.z, 1) - wall.max,
-				       glm::vec4(wall.min.x, wall.max.y, wall.max.z, 1) - wall.min);
-
+  glm::vec4 wall_normal = GetNormalWall(wall, NORMAL);
   int c1 = CheckColisionPointToPlane(point, wall_normal, wall.min);
 
-
   // Testing for the second wall
-  wallModel = Matrix_Translate(-10.0f,3.9f,0.0f) * Matrix_Rotate_Y(3.141592f/2) * wallDefault;
-
+  wallModel = Matrix_Translate(-30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * wallDefault;
   wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
-  wall_normal = crossproduct(glm::vec4(wall.max.x, wall.max.y, wall.min.z, 1) - wall.max,
-			     glm::vec4(wall.max.x, wall.max.y, wall.min.z, 1) - wall.min);
-
+  wall_normal = GetNormalWall(wall, FLIPPED);
   int c2 = CheckColisionPointToPlane(point, wall_normal, wall.min);
 
-
   // Testing for the third wall
-  wallModel = Matrix_Translate(10.0f,3.9f,0.0f) * Matrix_Rotate_Y(-3.141592f/2) * wallDefault;
-
+  wallModel = Matrix_Translate(30.0f, 0.0f, -30.0f) *  Matrix_Rotate_Y(-3.141592f / 2) *  wallDefault;
   wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
-  wall_normal = crossproduct(glm::vec4(wall.max.x, wall.max.y, wall.min.z, 1) - wall.max,
-			     glm::vec4(wall.max.x, wall.max.y, wall.min.z, 1) - wall.min);
-
+  wall_normal = GetNormalWall(wall, FLIPPED);
   int c3 = CheckColisionPointToPlane(point, wall_normal, wall.min);
 
+
   // Testing for the forth wall
-
-  wallModel = Matrix_Translate(0.0f,3.9f,10.0f) * Matrix_Rotate_Y(3.141592f) * wallDefault;
-
+  wallModel =  Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) * wallDefault;
   wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
-  wall_normal = crossproduct(glm::vec4(wall.min.x, wall.max.y, wall.max.z, 1) - wall.max,
-			     glm::vec4(wall.min.x, wall.max.y, wall.max.z, 1) - wall.min);
-
+  wall_normal = GetNormalWall(wall, NORMAL);
   int c4 = CheckColisionPointToPlane(point, wall_normal, wall.min);
 
+  /* std::cout << c1 << c2 << c3 << c4 << "\n"; */
   //if at leat one collision, the player cant move
   return c1 || c2 || c3 || c4;
 

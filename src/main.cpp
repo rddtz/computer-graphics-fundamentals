@@ -13,6 +13,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
 #define PLANE 2
 #define PORTALGUN 3
 #define FLOOR 4
+#define CUBE 5
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
 
@@ -119,17 +120,15 @@ int main(int argc, char* argv[]) {
   ComputeNormals(&planemodel);
   BuildTrianglesAndAddToVirtualScene(&planemodel);
 
-
-  ObjModel cube("../../data/the_cube.obj");
-  ComputeNormals(&cube);
-  BuildTrianglesAndAddToVirtualScene(&cube);
-
-
   ObjModel gunmodel("../../textures/portalgun/portalgun.obj");
   BuildTrianglesAndAddToVirtualScene(&gunmodel);
 
   ObjModel wallmodel("../../data/wall.obj");
   BuildTrianglesAndAddToVirtualScene(&wallmodel);
+
+  ObjModel cube("../../data/the_cube.obj");
+  ComputeNormals(&cube);
+  BuildTrianglesAndAddToVirtualScene(&cube);
 
   if (argc > 1) {
     ObjModel model(argv[1]);
@@ -230,21 +229,38 @@ int main(int argc, char* argv[]) {
         -(camera_view_vector / norm(camera_view_vector));
     camera_w_vector.y = 0;
 
-    if (g_KeyW_Pressed) {
-      camera_position_c += -camera_w_vector * speed * delta_t;
+
+    glm::vec4 cam_temp = camera_position_c;
+
+    if(g_KeyW_Pressed){
+      cam_temp += -camera_w_vector * speed * delta_t;
+      CheckColisionPointWalls(cam_temp);
+      // if(!CheckColisionPointWalls(cam_temp)){
+	camera_position_c = cam_temp;
+      // }
     }
-    if (g_KeyS_Pressed) {
-      camera_position_c += camera_w_vector * speed * delta_t;
+    if(g_KeyS_Pressed){
+      cam_temp += camera_w_vector * speed * delta_t;
+      CheckColisionPointWalls(cam_temp);
+      // if(!CheckColisionPointWalls(cam_temp)){
+	camera_position_c = cam_temp;
+	// {
     }
-    if (g_KeyD_Pressed) {
+    if(g_KeyD_Pressed ){
       glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
-      camera_position_c +=
-          (upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+      cam_temp += (upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+      CheckColisionPointWalls(cam_temp);
+      // if(!CheckColisionPointWalls(cam_temp)){
+	camera_position_c = cam_temp;
+      // }
     }
-    if (g_KeyA_Pressed) {
+    if(g_KeyA_Pressed){
       glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
-      camera_position_c +=
-          -(upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+      cam_temp += -(upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+      CheckColisionPointWalls(cam_temp);
+      // if(!CheckColisionPointWalls(cam_temp)){
+	camera_position_c = cam_temp;
+      // }
     }
 
     glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector,
@@ -317,8 +333,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
   DrawObject(model, "the_bunny", BUNNY);
 
   // Higher walls
-  model =
-      Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f);
+  model = Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", PLANE);
 
   model = Matrix_Translate(-30.0f, 0.0f, 30.0f) *
