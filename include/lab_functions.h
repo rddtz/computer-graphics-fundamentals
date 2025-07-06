@@ -605,7 +605,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         glfwGetCursorPos(window, &g_LastCursorPosX, &g_LastCursorPosY);
         g_LeftMouseButtonPressed = true;
     }
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+    if (button == GLFW_MOUSE_BUTTON_LEFT && (action == GLFW_RELEASE || action == GLFW_REPEAT))
     {
         // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
         // variável abaixo para false.
@@ -621,7 +621,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         glfwGetCursorPos(window, &g_LastCursorPosX, &g_LastCursorPosY);
         g_RightMouseButtonPressed = true;
     }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && (action == GLFW_RELEASE || action == GLFW_REPEAT))
     {
         // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
         // variável abaixo para false.
@@ -637,7 +637,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         glfwGetCursorPos(window, &g_LastCursorPosX, &g_LastCursorPosY);
         g_MiddleMouseButtonPressed = true;
     }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE)
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && (action == GLFW_RELEASE || action == GLFW_REPEAT))
     {
         // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
         // variável abaixo para false.
@@ -754,49 +754,49 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 
     float delta = 3.141592 / 16; // 22.5 graus, em radianos.
 
-    if (key == GLFW_KEY_X && action == GLFW_PRESS)
-    {
-        g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
+    /* if (key == GLFW_KEY_X && action == GLFW_PRESS) */
+    /* { */
+    /*     g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta; */
+    /* } */
 
-    if (key == GLFW_KEY_Y && action == GLFW_PRESS)
-    {
-        g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
-    {
-        g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
+    /* if (key == GLFW_KEY_Y && action == GLFW_PRESS) */
+    /* { */
+    /*     g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta; */
+    /* } */
+    /* if (key == GLFW_KEY_Z && action == GLFW_PRESS) */
+    /* { */
+    /*     g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta; */
+    /* } */
 
     // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-    {
-        g_AngleX = 0.0f;
-        g_AngleY = 0.0f;
-        g_AngleZ = 0.0f;
-        g_ForearmAngleX = 0.0f;
-        g_ForearmAngleZ = 0.0f;
-        g_TorsoPositionX = 0.0f;
-        g_TorsoPositionY = 0.0f;
-    }
+    /* if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) */
+    /* { */
+    /*     g_AngleX = 0.0f; */
+    /*     g_AngleY = 0.0f; */
+    /*     g_AngleZ = 0.0f; */
+    /*     g_ForearmAngleX = 0.0f; */
+    /*     g_ForearmAngleZ = 0.0f; */
+    /*     g_TorsoPositionX = 0.0f; */
+    /*     g_TorsoPositionY = 0.0f; */
+    /* } */
 
     // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
-    if (key == GLFW_KEY_P && action == GLFW_PRESS)
-    {
-        g_UsePerspectiveProjection = true;
-    }
+    /* if (key == GLFW_KEY_P && action == GLFW_PRESS) */
+    /* { */
+    /*     g_UsePerspectiveProjection = true; */
+    /* } */
 
     // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
-    if (key == GLFW_KEY_O && action == GLFW_PRESS)
-    {
-        g_UsePerspectiveProjection = false;
-    }
+    /* if (key == GLFW_KEY_O && action == GLFW_PRESS) */
+    /* { */
+    /*     g_UsePerspectiveProjection = false; */
+    /* } */
 
     // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
-    if (key == GLFW_KEY_H && action == GLFW_PRESS)
-    {
-        g_ShowInfoText = !g_ShowInfoText;
-    }
+    /* if (key == GLFW_KEY_H && action == GLFW_PRESS) */
+    /* { */
+    /*     g_ShowInfoText = !g_ShowInfoText; */
+    /* } */
 
     // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
     if (key == GLFW_KEY_R && action == GLFW_PRESS)

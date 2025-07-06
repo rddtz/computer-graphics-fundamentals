@@ -9,21 +9,37 @@ int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in
 int CheckCollisionAABBtoAABB(SceneObject obj1, glm::mat4 transf1, SceneObject obj2, glm::mat4 transf2);
 int CheckCollisionAABBtoPlane(BoundingBox box, glm::vec4 pn, float pd);
 int CheckCollisionPointWalls(glm::vec4 point);
-
 int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transform);
 
+std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector);
+
 BoundingBox GetBboxModel(ObjModel* model, glm::mat4 transformation);
+void SetWallsInfo();
+
+BoundingBox wallPoints;
+
+#define N_WALLS 4
+BoundingBox higher_walls[4];
 
 
+void SetWallsInfo(){
 
+  wallPoints = {glm::vec4(g_VirtualScene["the_wall"].bbox_min.x, g_VirtualScene["the_wall"].bbox_min.y, g_VirtualScene["the_wall"].bbox_min.z, 1),
+		glm::vec4(g_VirtualScene["the_wall"].bbox_max.x, g_VirtualScene["the_wall"].bbox_max.y, g_VirtualScene["the_wall"].bbox_max.z, 1)};
 
+  higher_walls[0] =  {Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		      Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
 
+  higher_walls[1] = {Matrix_Translate(-30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		     Matrix_Translate(-30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
 
+  higher_walls[2] = {Matrix_Translate(30.0f, 0.0f, -30.0f) *  Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		     Matrix_Translate(30.0f, 0.0f, -30.0f) *  Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
 
+  higher_walls[3] = {Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		     Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
 
-
-
-
+}
 
 
 int CheckCollisionAABBtoAABB(SceneObject obj1, glm::mat4 transf1, SceneObject obj2, glm::mat4 transf2){
@@ -80,12 +96,57 @@ int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transfor
 
 }
 
+
+std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector){
+
+  float intersection_point = 10000;
+  glm::vec4 hit_wall_normal;
+
+  for(int i = 0; i < N_WALLS; i++){
+
+    glm::vec4 wall_normal = GetNormalWall(higher_walls[i]);
+
+    float nd = dotproduct(view_vector, wall_normal);
+    float pn = dotproduct(camera_position, wall_normal);
+
+    if (nd >= 0.0f) {
+      // it would be a return
+    } else {
+
+      float t = (dotproduct(wall_normal, higher_walls[i].min) - pn) / nd;
+      if (t >= 0.0f) {
+	intersection_point = std::min(intersection_point, t);
+	hit_wall_normal = wall_normal;
+      }
+    }
+
+  }
+
+  glm::vec4 point;
+
+  if(intersection_point == 10000){
+    return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
+  } else{
+    glm::vec4 point = camera_position + intersection_point*view_vector;
+
+    if(point.y > higher_walls[0].max.y || point.y < -20){
+      return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
+    }
+  }
+
+  std::pair<glm::vec4, glm::vec4> ret = {point, hit_wall_normal};
+
+  return ret;
+
+}
+
 int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane){
 
   //                    moving the point to not enter in the wall
   glm::vec4 v = point - (point_in_plane + (pn/norm(pn))*1.1f);
 
   float d = dotproduct(pn, v);
+
 
   if(d > 0.01f){
     return 0;
