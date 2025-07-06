@@ -10,7 +10,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
                                                 // without the portals
 void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
                           int portal_color);
-void MovePlayerToPortal(glm::vec4 *camera, glm::mat4 portal_transform);
+void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform);
 
 #define SPHERE 0
 #define BUNNY 1
@@ -21,11 +21,8 @@ void MovePlayerToPortal(glm::vec4 *camera, glm::mat4 portal_transform);
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
 
-#define SCREEN_WIDTH 1920
-#define SCREEN_HEIGHT 1080
-
 glm::vec4 bluePortalPosition = glm::vec4(5.0f, 2.0f, 0.0f, 1.0f);
-glm::mat4 bluePortalRotation = Matrix_Identity();
+glm::mat4 bluePortalRotation = Matrix_Rotate_Y(-3.141592f / 2);
 bool isBluePortalActive = true;
 
 glm::vec4 orangePortalPosition = glm::vec4(0.0f, 2.0f, -5.0f, 1.0f);
@@ -52,7 +49,7 @@ int main(int argc, char* argv[]) {
 
   GLFWwindow* window;
   window =
-      glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT,
+      glfwCreateWindow(1920, 1080,
                        "INF01047 - Trabalho Final Rayan e Gabriel Henrique",
                        glfwGetPrimaryMonitor(), NULL);
   if (!window) {
@@ -60,6 +57,9 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "ERROR: glfwCreateWindow() failed.\n");
     std::exit(EXIT_FAILURE);
   }
+
+  int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
 
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
   gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
   glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
-  FramebufferSizeCallback(window, SCREEN_WIDTH, SCREEN_HEIGHT);
+  FramebufferSizeCallback(window, width, height);
 
   const GLubyte* vendor = glGetString(GL_VENDOR);
   const GLubyte* renderer = glGetString(GL_RENDERER);
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
   GLuint orangePortalTexture;
   glGenTextures(1, &orangePortalTexture);
   glBindTexture(GL_TEXTURE_2D, orangePortalTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB,
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
                GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -100,8 +100,8 @@ int main(int argc, char* argv[]) {
   GLuint bluePortalViewRBO;
   glGenRenderbuffers(1, &bluePortalViewRBO);
   glBindRenderbuffer(GL_RENDERBUFFER, bluePortalViewRBO);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH,
-                        SCREEN_HEIGHT);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
+                        height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                             GL_RENDERBUFFER, bluePortalViewRBO);
 
@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
   GLuint bluePortalTexture;
   glGenTextures(1, &bluePortalTexture);
   glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB,
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
                GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -130,8 +130,8 @@ int main(int argc, char* argv[]) {
   GLuint orangePortalViewRBO;
   glGenRenderbuffers(1, &orangePortalViewRBO);
   glBindRenderbuffer(GL_RENDERBUFFER, orangePortalViewRBO);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH,
-                        SCREEN_HEIGHT);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
+                        height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                             GL_RENDERBUFFER, orangePortalViewRBO);
 
@@ -231,6 +231,9 @@ int main(int argc, char* argv[]) {
 
       sceneObjects(view, projection, T_view, orangePortalTexture);
 
+      model = Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z);
+      DrawObject(model, "the_bunny", BUNNY);
+
       // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
       glBindFramebuffer(GL_FRAMEBUFFER, orangePortalViewFramebuffer);
       glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -267,6 +270,10 @@ int main(int argc, char* argv[]) {
                          glm::value_ptr(projection));
 
       sceneObjects(view, projection, T_view, orangePortalTexture);
+
+      model = Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z);
+      DrawObject(model, "the_bunny", BUNNY);
+
     } else {
       // Texturas dos portais nulas
     }
@@ -358,13 +365,15 @@ int main(int argc, char* argv[]) {
     glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"), 10);
 
-    model = Matrix_Translate(5.0f, 2.5f, 0.0f) *
-            bluePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
+    model = Matrix_Translate(5.0f, 2.5f, 0.0f) * bluePortalRotation *
+            Matrix_Scale(2.5f, 2.5f, 1.0f);
     DrawObject(model, "the_portal", BLUE_PORTAL);
 
     if (CheckCollisionPlayerPortal(camera_position_c, model)) {
       printf("Colidiu com o portal azul\n");
-      MovePlayerToPortal(&camera_position_c, Matrix_Translate(0.0f, 2.5f, -5.0f) * Matrix_Scale(2.5f, 2.5f, 1.0f));
+      MovePlayerToPortal(
+          &camera_position_c,
+          Matrix_Translate(0.0f, 2.5f, -5.0f) * Matrix_Scale(2.5f, 2.5f, 1.0f));
     }
 
     glActiveTexture(GL_TEXTURE11);
@@ -372,13 +381,16 @@ int main(int argc, char* argv[]) {
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"),
                 11);
 
-    model =
-        Matrix_Translate(0.0f, 2.5f, -5.0f) * orangePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
+    model = Matrix_Translate(0.0f, 2.5f, -5.0f) * orangePortalRotation *
+            Matrix_Scale(2.5f, 2.5f, 1.0f);
     DrawObject(model, "the_portal", ORANGE_PORTAL);
 
     if (CheckCollisionPlayerPortal(camera_position_c, model)) {
       printf("Colidiu com o portal laranja\n");
-      MovePlayerToPortal(&camera_position_c, Matrix_Translate(5.0f, 2.5f, 0.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(2.5f, 2.5f, 1.0f));
+      MovePlayerToPortal(&camera_position_c,
+                         Matrix_Translate(5.0f, 2.5f, 0.0f) *
+                             Matrix_Rotate_Y(-3.141592f / 2) *
+                             Matrix_Scale(2.5f, 2.5f, 1.0f));
     }
 
     // Drawing the portal gun
@@ -398,20 +410,26 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
-void MovePlayerToPortal(glm::vec4 *camera, glm::mat4 portal_transform){
+void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform) {
+  BoundingBox portalPoints = {
+      glm::vec4(g_VirtualScene["the_portal"].bbox_min.x,
+                g_VirtualScene["the_portal"].bbox_min.y,
+                g_VirtualScene["the_portal"].bbox_min.z, 1),
+      glm::vec4(g_VirtualScene["the_portal"].bbox_max.x,
+                g_VirtualScene["the_portal"].bbox_max.y,
+                g_VirtualScene["the_portal"].bbox_max.z, 1)};
 
-  BoundingBox portalPoints = {glm::vec4(g_VirtualScene["the_portal"].bbox_min.x, g_VirtualScene["the_portal"].bbox_min.y, g_VirtualScene["the_portal"].bbox_min.z, 1),
-			      glm::vec4(g_VirtualScene["the_portal"].bbox_max.x, g_VirtualScene["the_portal"].bbox_max.y, g_VirtualScene["the_portal"].bbox_max.z, 1)};
-
-  BoundingBox portal = {portal_transform * portalPoints.min, portal_transform * portalPoints.max};
+  BoundingBox portal = {portal_transform * portalPoints.min,
+                        portal_transform * portalPoints.max};
 
   glm::vec4 portal_normal = GetNormalWall(portal);
 
-  glm::vec4 new_position = glm::vec4((portal.max.x + portal.min.x)/2.0f, camera->y, (portal.max.z + portal.min.z)/2.0f, 1.0f);
+  glm::vec4 new_position =
+      glm::vec4((portal.max.x + portal.min.x) / 2.0f, camera->y,
+                (portal.max.z + portal.min.z) / 2.0f, 1.0f);
 
-  *camera = new_position + 2.0f*(portal_normal/norm(portal_normal));
+  *camera = new_position + 2.0f * (portal_normal / norm(portal_normal));
   // return new_position;
-
 }
 
 void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
@@ -497,20 +515,20 @@ void DrawObject(glm::mat4 model, const char* name, int id) {
   DrawVirtualObject(name);
 }
 
-void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal, int portal_color) {
+void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
+                          int portal_color) {
   float normal_x = surface_normal.x;
   float normal_z = surface_normal.z;
 
   const float delta_wall = 0.01;
 
-  if(normal_z < 1e-6f){
-    if(portal_color == BLUE_PORTAL){
+  if (normal_z < 1e-6f) {
+    if (portal_color == BLUE_PORTAL) {
       bluePortalRotation = Matrix_Identity();
 
       bluePortalPosition = colision_point;
       bluePortalPosition.z += delta_wall;
-    }
-    else{
+    } else {
       orangePortalRotation = Matrix_Identity();
 
       orangePortalPosition = colision_point;
@@ -518,14 +536,13 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal, in
     }
   }
 
-  if(normal_z > 1e-6f){
-    if(portal_color == BLUE_PORTAL){
+  if (normal_z > 1e-6f) {
+    if (portal_color == BLUE_PORTAL) {
       bluePortalRotation = Matrix_Rotate_Y(-3.141592f);
 
       bluePortalPosition = colision_point;
       bluePortalPosition.z -= delta_wall;
-    }
-    else{
+    } else {
       orangePortalRotation = Matrix_Rotate_Y(-3.141592f);
 
       orangePortalPosition = colision_point;
@@ -533,34 +550,31 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal, in
     }
   }
 
-  if(normal_x < 1e-6f){
-    if(portal_color == BLUE_PORTAL){
-      bluePortalRotation = Matrix_Rotate_Y(3.141592f/2);
+  if (normal_x < 1e-6f) {
+    if (portal_color == BLUE_PORTAL) {
+      bluePortalRotation = Matrix_Rotate_Y(3.141592f / 2);
 
       bluePortalPosition = colision_point;
       bluePortalPosition.x += delta_wall;
-    }
-    else{
-      orangePortalRotation = Matrix_Rotate_Y(3.141592f/2);
+    } else {
+      orangePortalRotation = Matrix_Rotate_Y(3.141592f / 2);
 
       orangePortalPosition = colision_point;
       orangePortalPosition.x += delta_wall;
     }
   }
 
-  if(normal_x > 1e-6f){
-    if(portal_color == BLUE_PORTAL){
-      bluePortalRotation = Matrix_Rotate_Y(-3.141592f/2);
+  if (normal_x > 1e-6f) {
+    if (portal_color == BLUE_PORTAL) {
+      bluePortalRotation = Matrix_Rotate_Y(-3.141592f / 2);
 
       bluePortalPosition = colision_point;
       bluePortalPosition.x -= delta_wall;
-    }
-    else{
-      orangePortalRotation = Matrix_Rotate_Y(-3.141592f/2);
+    } else {
+      orangePortalRotation = Matrix_Rotate_Y(-3.141592f / 2);
 
       orangePortalPosition = colision_point;
       orangePortalPosition.x -= delta_wall;
     }
   }
-
 }
