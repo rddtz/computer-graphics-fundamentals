@@ -37,6 +37,7 @@ uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
 uniform sampler2D TextureImage3;
+uniform sampler2D BluePortalTexture;
 uniform sampler2D OrangePortalTexture;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
@@ -146,6 +147,8 @@ void main()
 
     vec3 Kd3 = texture(TextureImage3, vec2(U,V)).rgb;
 
+    vec3 KdBP = texture(BluePortalTexture, vec2(U,V)).rgb;
+
     vec3 KdOP = texture(OrangePortalTexture, vec2(U,V)).rgb;
 
     float lambert = max(0,dot(n,l));
@@ -160,7 +163,7 @@ void main()
     } else if(object_id == ORANGE_PORTAL){
         color.rgb = KdOP * 0.5 + vec3(0.996, 0.318, 0.027) * 0.5;  
     } else if(object_id == BLUE_PORTAL){
-        color.rgb = KdOP * 0.5 + vec3(0.325, 0.745, 0.937) * 0.5; 
+        color.rgb = KdBP * 0.5 + vec3(0.325, 0.745, 0.937) * 0.5; 
     } else if (object_id == PLANE){
         color.rgb = Kd2;
     } else{
