@@ -28,7 +28,7 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
 #define WEST 3
 
 glm::vec4 bluePortalPosition = glm::vec4(5.0f, 2.0f, 0.0f, 1.0f);
-glm::mat4 bluePortalRotation = Matrix_Identity();
+glm::mat4 bluePortalRotation = Matrix_Rotate_Y(-3.141592 / 2);
 glm::vec4 bluePortalLooksAt = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
 int bluePortalSeesDirection = SOUTH;
 bool isBluePortalActive = true;
@@ -36,7 +36,7 @@ bool isBluePortalActive = true;
 glm::vec4 orangePortalPosition = glm::vec4(0.0f, 2.0f, -5.0f, 1.0f);
 glm::mat4 orangePortalRotation = Matrix_Identity();
 glm::vec4 orangePortalLooksAt = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
-int orangePortalSeesDirection = SOUTH;
+int orangePortalSeesDirection = WEST;
 bool isOrangePortalActive = true;
 
 int main(int argc, char* argv[]) {
@@ -239,6 +239,17 @@ int main(int argc, char* argv[]) {
 
       sceneObjects(view, projection, T_view, orangePortalTexture);
 
+      glActiveTexture(GL_TEXTURE10);
+      glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
+      glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"),
+                  10);
+
+      glm::mat4 modelOrangePortal =
+          Matrix_Translate(orangePortalPosition.x, orangePortalPosition.y,
+                           orangePortalPosition.z) *
+          orangePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
+      DrawObject(modelOrangePortal, "the_portal", ORANGE_PORTAL);
+
       model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
                                camera_position_c.z);
       DrawObject(model, "the_bunny", BUNNY);
@@ -275,6 +286,22 @@ int main(int argc, char* argv[]) {
                          glm::value_ptr(projection));
 
       sceneObjects(view, projection, T_view, orangePortalTexture);
+
+      glActiveTexture(GL_TEXTURE10);
+      glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
+      glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"),
+                  10);
+
+      glm::mat4 modelBluePortal =
+          Matrix_Translate(bluePortalPosition.x, bluePortalPosition.y,
+                           bluePortalPosition.z) *
+          bluePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
+      DrawObject(modelBluePortal, "the_portal", BLUE_PORTAL);
+
+      glActiveTexture(GL_TEXTURE11);
+      glBindTexture(GL_TEXTURE_2D, orangePortalTexture);
+      glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"),
+                  11);
 
       model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
                                camera_position_c.z);
