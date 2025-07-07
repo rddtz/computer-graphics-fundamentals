@@ -5,9 +5,9 @@
 void LoadTextures();  // Function to Load the texture from images
 void DrawObject(glm::mat4 model, const char* name,
                 int id);  // Function to draw the object in the screen
-void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
-                  GLuint orangePortalTexture);  // Function to draw the map
-                                                // without the portals
+void sceneObjects(glm::mat4 view, glm::mat4 projection,
+                  glm::mat4 T_view);  // Function to draw the map
+                                      // without the portals
 void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
                           int portal_color);
 void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
   glCullFace(GL_BACK);
   glFrontFace(GL_CCW);
 
-  glm::vec4 camera_position_c = glm::vec4(0.0f, 2.5f, 5.0f, 1.0f);
+  glm::vec4 camera_position_c = glm::vec4(0.0f, 2.5f, 25.0f, 1.0f);
   float speed = 5.5f;
   float prev_time = (float)glfwGetTime();
 
@@ -237,7 +237,7 @@ int main(int argc, char* argv[]) {
       glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
                          glm::value_ptr(projection));
 
-      sceneObjects(view, projection, T_view, orangePortalTexture);
+      sceneObjects(view, projection, T_view);
 
       glActiveTexture(GL_TEXTURE10);
       glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
@@ -285,7 +285,7 @@ int main(int argc, char* argv[]) {
       glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
                          glm::value_ptr(projection));
 
-      sceneObjects(view, projection, T_view, orangePortalTexture);
+      sceneObjects(view, projection, T_view);
 
       glActiveTexture(GL_TEXTURE10);
       glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
@@ -425,7 +425,7 @@ int main(int argc, char* argv[]) {
       projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
     }
 
-    sceneObjects(view, projection, T_view, orangePortalTexture);
+    sceneObjects(view, projection, T_view);
 
     glActiveTexture(GL_TEXTURE10);
     glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
@@ -540,8 +540,7 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
     }
   }
 }
-void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
-                  GLuint orangePortalTexture) {
+void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   glm::mat4 model = Matrix_Identity();
 
   glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
