@@ -12,6 +12,8 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
                           int portal_color);
 void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
                         int portal_color);
+glm::vec4 calculateBezierCurve(float t, glm::vec4 point_a, glm::vec4 point_b,
+                               glm::vec4 point_c, glm::vec4 point_d);
 
 #define SPHERE 0
 #define BUNNY 1
@@ -484,8 +486,7 @@ int main(int argc, char* argv[]) {
 
 void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
                         int portal_color) {
-
-  if(!isBluePortalActive || !isOrangePortalActive){
+  if (!isBluePortalActive || !isOrangePortalActive) {
     return;
   }
 
@@ -566,6 +567,18 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
           Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
   DrawObject(model, "the_bunny", BUNNY);
 
+  glm::vec4 pointA = glm::vec4(-29.0f, -20.0f, -9.5f, 1.0f);
+  glm::vec4 pointB = glm::vec4(18.55f, -21.78f, 0.0f, 1.0f);
+  glm::vec4 pointC = glm::vec4(-55.38f, 19.38f, 0.0f, 1.0f);
+  glm::vec4 pointD = glm::vec4(29.0f, -0.5f, 9.0f, 1.0f);
+
+  glm::vec4 bezierPoint =
+      calculateBezierCurve((sin(0.1 * glfwGetTime()) + 1)/2, pointA, pointB, pointC, pointD);
+
+  model = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) *
+          Matrix_Rotate_Y(3.141592 / 2) * Matrix_Scale(0.5, 0.5, 0.5);
+  DrawObject(model, "the_bunny", BUNNY);
+
   // Higher walls
   model =
       Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f);
@@ -596,19 +609,17 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
 
-
   model = Matrix_Translate(-30.0, 20.0f, -10.0f) *
-    Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
+          Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(-30.0, 20.0f, 10.0f) *
-    Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
+          Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
 
   model = Matrix_Translate(-30.0, 20.0f, -30.0f) *
-    Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
+          Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
-
 
   // Lower walls
 
@@ -747,7 +758,7 @@ glm::vec4 interpolate(float t, glm::vec4 point_a, glm::vec4 point_b) {
   return point_a + t * (point_b - point_a);
 }
 
-glm::vec4 calculateBezierCurve(int t, glm::vec4 point_a, glm::vec4 point_b,
+glm::vec4 calculateBezierCurve(float t, glm::vec4 point_a, glm::vec4 point_b,
                                glm::vec4 point_c, glm::vec4 point_d) {
   glm::vec4 ab = interpolate(t, point_a, point_b);
   glm::vec4 bc = interpolate(t, point_b, point_c);
