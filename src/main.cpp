@@ -253,7 +253,8 @@ int main(int argc, char* argv[]) {
       DrawObject(modelOrangePortal, "the_portal", ORANGE_PORTAL);
 
       model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
-                               camera_position_c.z);
+                               camera_position_c.z) *
+              Matrix_Rotate_Y(g_CameraTheta + 3.141592/2);
       DrawObject(model, "the_bunny", BUNNY);
 
       // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
@@ -306,7 +307,8 @@ int main(int argc, char* argv[]) {
                   11);
 
       model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
-                               camera_position_c.z);
+                               camera_position_c.z) *
+              Matrix_Rotate_Y(g_CameraTheta + 3.141592/2);
       DrawObject(model, "the_bunny", BUNNY);
 
     } else {
@@ -572,8 +574,8 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   glm::vec4 pointC = glm::vec4(-55.38f, 19.38f, 0.0f, 1.0f);
   glm::vec4 pointD = glm::vec4(29.0f, -0.5f, 9.0f, 1.0f);
 
-  glm::vec4 bezierPoint =
-      calculateBezierCurve((sin(0.1 * glfwGetTime()) + 1)/2, pointA, pointB, pointC, pointD);
+  glm::vec4 bezierPoint = calculateBezierCurve(
+      (sin(0.1 * glfwGetTime()) + 1) / 2, pointA, pointB, pointC, pointD);
 
   model = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) *
           Matrix_Rotate_Y(3.141592 / 2) * Matrix_Scale(0.5, 0.5, 0.5);
@@ -609,7 +611,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", FLOOR);
 
-  //Ceilings
+  // Ceilings
   model = Matrix_Translate(-30.0, 20.0f, -10.0f) *
           Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
@@ -675,7 +677,7 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       bluePortalLooksAt.z += 5.0;
 
       bluePortalPosition = colision_point;
-      bluePortalPosition.z += delta_wall;
+      bluePortalPosition.z += delta_wall + 0.05;
     } else {
       orangePortalRotation = Matrix_Identity();
       orangePortalSeesDirection = SOUTH;
@@ -697,7 +699,7 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       bluePortalLooksAt.z -= 5.0;
 
       bluePortalPosition = colision_point;
-      bluePortalPosition.z -= delta_wall;
+      bluePortalPosition.z -= delta_wall + 0.05;
     } else {
       orangePortalRotation = Matrix_Rotate_Y(-3.141592f);
       orangePortalSeesDirection = NORTH;
@@ -719,7 +721,7 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       bluePortalLooksAt.x += 5.0;
 
       bluePortalPosition = colision_point;
-      bluePortalPosition.x += delta_wall;
+      bluePortalPosition.x += delta_wall + 0.05;
     } else {
       orangePortalRotation = Matrix_Rotate_Y(3.141592f / 2);
       orangePortalSeesDirection = EAST;
@@ -741,7 +743,7 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       bluePortalLooksAt.x -= 5.0;
 
       bluePortalPosition = colision_point;
-      bluePortalPosition.x -= delta_wall;
+      bluePortalPosition.x -= delta_wall + 0.05;
     } else {
       orangePortalRotation = Matrix_Rotate_Y(-3.141592f / 2);
       orangePortalSeesDirection = WEST;
