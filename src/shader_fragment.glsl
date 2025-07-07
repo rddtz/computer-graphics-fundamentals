@@ -21,7 +21,7 @@ uniform mat4 projection;
 // Identificador que define qual objeto está sendo desenhado no momento
 #define SPHERE 0
 #define BUNNY  1
-#define PLANE  2
+#define WALL  2
 #define PORTALGUN 3
 #define FLOOR 4
 #define BLUE_PORTAL 10
@@ -66,10 +66,13 @@ void main()
     vec4 n = normalize(normal);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
+    vec4 l = normalize(vec4(1.0,1.0,0.5,0.0));
 
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
+
+    // Vetor que define o sentido da reflexão especular ideal
+    vec4 r = -l + 2*n*dot(n,l);
 
     // Coordenadas de textura U e V
     float U = 0.0;
@@ -125,7 +128,7 @@ void main()
         U = (position_model.x - minx) / (maxx - minx);
         V = (position_model.y - miny) / (maxy - miny);
     }
-    else if ( object_id == PLANE || object_id == FLOOR || object_id == BLUE_PORTAL || object_id == ORANGE_PORTAL)
+    else if ( object_id == WALL || object_id == FLOOR || object_id == BLUE_PORTAL || object_id == ORANGE_PORTAL)
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
         U = texcoords.x;
@@ -153,21 +156,33 @@ void main()
 
     float lambert = max(0,dot(n,l));
 
+    vec3 Ia = vec3(0.2, 0.2, 0.2);
 
-    if ((object_id == BUNNY) || (object_id == SPHERE)){
+    if ((object_id == SPHERE)){
         // Equação de Iluminação
         //          *** Cor da Terra         *** Luzes noturnas
         color.rgb = Kd0 * (lambert + 0.01) + Kd1 * max(0,(1 - lambert * 4));
+    } else if (object_id == BUNNY){
+        vec3 Kd = vec3(0.678, 0.678, 0.059);
+        vec3 Ks = vec3(0.8, 0.8, 0.8);
+        vec3 Ka = Kd / 2;
+        float q = 80.0;
+
+        vec4 h = normalize(v + l);
+
+        color.rgb = lambert * Kd + Ka * Ia + Ks * max(0, pow(dot(n,h),q));
     } else if (object_id == PORTALGUN){
         color.rgb = Kd3;
     } else if(object_id == ORANGE_PORTAL){
         color.rgb = KdOP * 0.5 + vec3(0.996, 0.318, 0.027) * 0.5;  
     } else if(object_id == BLUE_PORTAL){
         color.rgb = KdBP * 0.5 + vec3(0.325, 0.745, 0.937) * 0.5; 
-    } else if (object_id == PLANE){
+    } else if (object_id == WALL){
+        color.rgb = Kd2;
+    } else if (object_id == FLOOR){
         color.rgb = Kd2;
     } else{
-        color.rgb = KdOP;
+        color.rgb = vec3(0.0,0.0,0.0);
     }
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:

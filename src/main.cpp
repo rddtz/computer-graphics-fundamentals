@@ -599,16 +599,17 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   // Floors
   model = Matrix_Translate(-30.0, 0.0f, -10.0f) *
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", WALL);
+  DrawObject(model, "the_wall", FLOOR);
 
   model = Matrix_Translate(-30.0, -20.0f, 10.0f) *
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", WALL);
+  DrawObject(model, "the_wall", FLOOR);
 
   model = Matrix_Translate(-30.0, 0.0f, 30.0f) *
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
-  DrawObject(model, "the_wall", WALL);
+  DrawObject(model, "the_wall", FLOOR);
 
+  //Ceilings
   model = Matrix_Translate(-30.0, 20.0f, -10.0f) *
           Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
