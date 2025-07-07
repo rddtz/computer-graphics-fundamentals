@@ -13,9 +13,6 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
 void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
                         int portal_color);
 
-void DrawCrossair(glm::mat4 view, glm::vec4 camera, float nearplane,
-                  float farplane);
-
 #define SPHERE 0
 #define BUNNY 1
 #define WALL 2
@@ -317,12 +314,14 @@ int main(int argc, char* argv[]) {
     glm::vec4 cam_temp = camera_position_c;
 
     if (g_KeyW_Pressed) {
+      cam_temp = camera_position_c;
       cam_temp += -camera_w_vector * speed * delta_t;
       if (!CheckCollisionPointWalls(cam_temp)) {
         camera_position_c = cam_temp;
       }
     }
     if (g_KeyS_Pressed) {
+      cam_temp = camera_position_c;
       cam_temp += camera_w_vector * speed * delta_t;
       CheckCollisionPointWalls(cam_temp);
       if (!CheckCollisionPointWalls(cam_temp)) {
@@ -330,6 +329,7 @@ int main(int argc, char* argv[]) {
       }
     }
     if (g_KeyD_Pressed) {
+      cam_temp = camera_position_c;
       glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
       cam_temp += (upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
       CheckCollisionPointWalls(cam_temp);
@@ -338,6 +338,7 @@ int main(int argc, char* argv[]) {
       }
     }
     if (g_KeyA_Pressed) {
+      cam_temp = camera_position_c;
       glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
       cam_temp += -(upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
       CheckCollisionPointWalls(cam_temp);
@@ -369,6 +370,11 @@ int main(int argc, char* argv[]) {
 
       UpdatePortalPosition(collisionResult.first, collisionResult.second,
                            ORANGE_PORTAL);
+    }
+
+    cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
+    if(!CheckCollisionPointFloor(cam_temp)){
+      camera_position_c = cam_temp;
     }
 
     //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -459,10 +465,10 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
   BoundingBox portal = {portal_transform * portalPoints.min,
                         portal_transform * portalPoints.max};
 
-  glm::vec4 portal_normal = GetNormalWall(portal);
+  glm::vec4 portal_normal = GetNormal(portal);
 
   glm::vec4 new_position =
-      glm::vec4((portal.max.x + portal.min.x) / 2.0f, camera->y,
+    glm::vec4((portal.max.x + portal.min.x) / 2.0f, (portal.max.y + portal.min.y)/2.0f,
                 (portal.max.z + portal.min.z) / 2.0f, 1.0f);
 
   *camera = new_position + 2.0f * (portal_normal / norm(portal_normal));
@@ -592,6 +598,10 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
   float normal_x = surface_normal.x;
   float normal_z = surface_normal.z;
 
+  if(colision_point.x == -1 && colision_point.y == -1 && colision_point.z == -1 && colision_point.w == -1){
+    return;
+  }
+
   const float delta_wall = 0.05;
 
   if (normal_z > 1e-6f) {
@@ -657,17 +667,4 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       orangePortalPosition.x -= delta_wall;
     }
   }
-}
-
-void DrawCrossair(glm::mat4 view, glm::vec4 camera, float nearplane,
-                  float farplane) {
-  float t = 1.5f * g_CameraDistance / 2.5f;
-  float b = -t;
-  float r = t * g_ScreenRatio;
-  float l = -r;
-  glm::mat4 projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
-
-  glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
-  glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
-                     glm::value_ptr(projection));
 }

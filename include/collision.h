@@ -3,12 +3,14 @@
 
 #include "configs.h"
 
-glm::vec4 GetNormalWall(BoundingBox wall);
+glm::vec4 GetNormal(BoundingBox wall);
 
 int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane, float offset);
 int CheckCollisionAABBtoAABB(SceneObject obj1, glm::mat4 transf1, SceneObject obj2, glm::mat4 transf2);
 int CheckCollisionAABBtoPlane(BoundingBox box, glm::vec4 pn, float pd);
+
 int CheckCollisionPointWalls(glm::vec4 point);
+int CheckCollisionPointFloor(glm::vec4 point);
 int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transform);
 
 std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector);
@@ -19,8 +21,11 @@ void SetWallsInfo();
 BoundingBox wallPoints;
 
 #define N_WALLS 4
-BoundingBox higher_walls[4];
+#define N_FLOORS 3
 
+BoundingBox lower_walls[N_WALLS];
+BoundingBox higher_walls[N_WALLS];
+BoundingBox floors[N_FLOORS];
 
 void SetWallsInfo(){
 
@@ -39,6 +44,29 @@ void SetWallsInfo(){
   higher_walls[3] = {Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
 		     Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
 
+
+  lower_walls[0] =  {Matrix_Translate(-30.0f, -20.0f, -10.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		     Matrix_Translate(-30.0f, -20.0f, -10.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+  lower_walls[1] = {Matrix_Translate(-30.0f, -20.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		    Matrix_Translate(-30.0f, -20.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+  lower_walls[2] = {Matrix_Translate(30.0f, -20.0f, -30.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		    Matrix_Translate(30.0f, -20.0f, -30.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+  lower_walls[3] = {Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		    Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+
+  floors[0] = {Matrix_Translate(-30.0, 0.0f, -10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+	       Matrix_Translate(-30.0, 0.0f, -10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+  floors[1] = {Matrix_Translate(-30.0, -20.0f, 10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+	       Matrix_Translate(-30.0, -20.0f, 10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+
+  floors[2] = {Matrix_Translate(-30.0, 0.0f, 30.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+	       Matrix_Translate(-30.0, 0.0f, 30.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
 }
 
 
@@ -78,25 +106,31 @@ int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transfor
 
   BoundingBox portal = {portal_transform * portalPoints.min, portal_transform * portalPoints.max};
 
-  glm::vec4 portal_normal = GetNormalWall(portal);
+  glm::vec4 portal_normal = GetNormal(portal);
 
-  // Portal can only be aligned with z axis or x axis because we can't have portals in the floor or ceil
-  if(abs(portal_normal.x) > 0.01f){ // normal is x, portal is aligned with z
 
-    float maxz = std::max(portal.max.z, portal.min.z);
-    float minz = std::min(portal.max.z, portal.min.z);
+  float maxy = std::max(portal.max.y, portal.min.y);
+  float miny = std::min(portal.max.y, portal.min.y);
 
-    if(player_point.z <= maxz && player_point.z >= minz){
+  if(player_point.y <= maxy && player_point.y >= miny){
+    // Portal can only be aligned with z axis or x axis because we can't have portals in the floor or ceil
+    if(abs(portal_normal.x) > 0.01f){ // normal is x, portal is aligned with z
 
-      return CheckCollisionPointToPlane(player_point, portal_normal, (portal.max + portal.min)/2.0f, 1.1);
-    }
-  } else { // normal is z, portal is aligned with x
+      float maxz = std::max(portal.max.z, portal.min.z);
+      float minz = std::min(portal.max.z, portal.min.z);
 
-    float maxx = std::max(portal.max.x, portal.min.x);
-    float minx = std::min(portal.max.x, portal.min.x);
+      if(player_point.z <= maxz && player_point.z >= minz){
 
-    if(player_point.x <= maxx && player_point.x >= minx){
-      return CheckCollisionPointToPlane(player_point, portal_normal, (portal.max + portal.min)/2.0f, 1.1);
+	return CheckCollisionPointToPlane(player_point, portal_normal, (portal.max + portal.min)/2.0f, 1.1);
+      }
+    } else { // normal is z, portal is aligned with x
+
+      float maxx = std::max(portal.max.x, portal.min.x);
+      float minx = std::min(portal.max.x, portal.min.x);
+
+      if(player_point.x <= maxx && player_point.x >= minx){
+	return CheckCollisionPointToPlane(player_point, portal_normal, (portal.max + portal.min)/2.0f, 1.1);
+      }
     }
   }
 
@@ -104,15 +138,19 @@ int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transfor
 
 }
 
-
+/* Using line-to-plane collision to check the gun shot into the wall */
 std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector){
 
   float intersection_point = 10000;
   glm::vec4 hit_wall_normal;
+  int index = 0;
+  glm::vec4 point;
+
+  bool usingLowers = true;
 
   for(int i = 0; i < N_WALLS; i++){
 
-    glm::vec4 wall_normal = GetNormalWall(higher_walls[i]);
+    glm::vec4 wall_normal = GetNormal(lower_walls[i]);
 
     float nd = dotproduct(view_vector, wall_normal);
     float pn = dotproduct(camera_position, wall_normal);
@@ -121,35 +159,80 @@ std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_posit
       // it would be a return
     } else {
 
-      float t = (dotproduct(wall_normal, higher_walls[i].min) - pn) / nd;
+      float t = (dotproduct(wall_normal, lower_walls[i].min) - pn) / nd;
       if (t >= 0.0f) {
 	if(t < intersection_point){
+	  index = i;
 	  intersection_point = t;
 	  hit_wall_normal = wall_normal;
 	}
       }
     }
-
   }
 
-  glm::vec4 point;
+  point = camera_position + intersection_point*view_vector;
 
+  if(intersection_point == 10000){
+    return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
+  }
+
+  if(point.y < lower_walls[index].min.y){
+    return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
+  }
+
+  if(point.y > lower_walls[index].max.y){
+
+    usingLowers = false;
+
+    intersection_point = 10000;
+    index = 0;
+
+    for(int i = 0; i < N_WALLS; i++){
+
+      glm::vec4 wall_normal = GetNormal(higher_walls[i]);
+
+      float nd = dotproduct(view_vector, wall_normal);
+      float pn = dotproduct(camera_position, wall_normal);
+
+      if (nd >= 0.0f) {
+	// it would be a return
+      } else {
+
+	float t = (dotproduct(wall_normal, higher_walls[i].min) - pn) / nd;
+	if (t >= 0.0f) {
+	  if(t < intersection_point){
+	    index = i;
+	    intersection_point = t;
+	    hit_wall_normal = wall_normal;
+	  }
+	}
+      }
+    }
+  } else {
+    if(abs(point.z) > 10){
+      return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
+    }
+  }
+
+  point = camera_position + intersection_point*view_vector;
   if(intersection_point == 10000){
     return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
   } else{
     point = camera_position + intersection_point*view_vector;
 
-    if(point.y > higher_walls[0].max.y || point.y < -20){
+    if(!usingLowers && (point.y > higher_walls[index].max.y || point.y < higher_walls[index].min.y)){
       return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
     }
   }
 
+  point = camera_position + intersection_point*view_vector;
   std::pair<glm::vec4, glm::vec4> ret = {point, hit_wall_normal};
 
   return ret;
 
 }
 
+/* Using Point-to-Plane collision to do the wall and floor colisions */
 int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane, float offset){
 
   //                    moving the point to not enter in the wall
@@ -163,10 +246,10 @@ int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in
   }
 
   return 1;
-
 }
 
-glm::vec4 GetNormalWall(BoundingBox wall){
+
+glm::vec4 GetNormal(BoundingBox wall){
 
   glm::vec4 normal;
 
@@ -182,41 +265,70 @@ glm::vec4 GetNormalWall(BoundingBox wall){
 
 }
 
+int CheckCollisionPointFloor(glm::vec4 point){
+
+  for(int i= 0; i < N_FLOORS; i++){
+
+    int res = 0;
+
+    glm::vec4 floor_normal = GetNormal(floors[i]);
+
+    float maxx = std::max(floors[i].max.x, floors[i].min.x);
+    float minx = std::min(floors[i].max.x, floors[i].min.x);
+    float maxz = std::max(floors[i].max.z, floors[i].min.z);
+    float minz = std::min(floors[i].max.z, floors[i].min.z);
+
+
+    if(point.y >= floors[i].max.y && point.x >= minx && point.x <= maxx && point.z >= minz && point.z <= maxz){
+      res = CheckCollisionPointToPlane(point, floor_normal, floors[i].min, 2.0);
+    }
+
+    if(res == 1){
+      return 1;
+    }
+  }
+
+  return 0;
+
+}
+
 int CheckCollisionPointWalls(glm::vec4 point){
 
-  BoundingBox wallPoints = {glm::vec4(g_VirtualScene["the_wall"].bbox_min.x, g_VirtualScene["the_wall"].bbox_min.y, g_VirtualScene["the_wall"].bbox_min.z, 1),
-			    glm::vec4(g_VirtualScene["the_wall"].bbox_max.x, g_VirtualScene["the_wall"].bbox_max.y, g_VirtualScene["the_wall"].bbox_max.z, 1)};
+  for(int i = 0; i < N_WALLS; i++){
 
-  glm::mat4 wallDefault = Matrix_Scale(10.0f, 10.0f, 0.0f);
+    glm::vec4 wall_normal = GetNormal(higher_walls[i]);
 
-  // Testing for the first wall
-  glm::mat4 wallModel = Matrix_Translate(-30.0f, 0.0f, -30.0f) * wallDefault;
-  BoundingBox wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
-  glm::vec4 wall_normal = GetNormalWall(wall);
-  int c1 = CheckCollisionPointToPlane(point, wall_normal, wall.min, 1.1);
+    int res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 1.1);
 
-  // Testing for the second wall
-  wallModel = Matrix_Translate(-30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * wallDefault;
-  wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
-  wall_normal = GetNormalWall(wall);
-  int c2 = CheckCollisionPointToPlane(point, wall_normal, wall.min, 1.1);
-
-  // Testing for the third wall
-  wallModel = Matrix_Translate(30.0f, 0.0f, -30.0f) *  Matrix_Rotate_Y(-3.141592f / 2) *  wallDefault;
-  wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
-  wall_normal = GetNormalWall(wall);
-  int c3 = CheckCollisionPointToPlane(point, wall_normal, wall.min, 1.1);
+    if(res == 1){
+      return 1;
+    }
+  }
 
 
-  // Testing for the forth wall
-  wallModel =  Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) * wallDefault;
-  wall = {wallModel * wallPoints.min, wallModel * wallPoints.max};
-  wall_normal = GetNormalWall(wall);
-  int c4 = CheckCollisionPointToPlane(point, wall_normal, wall.min, 1.1);
+  for(int i = 0; i < N_WALLS; i++){
+
+    glm::vec4 wall_normal = GetNormal(lower_walls[i]);
+
+    int res = 0;
+    if(abs(wall_normal).z > 0.001){
+
+      if(point.y < lower_walls[i].max.y){
+	 res = CheckCollisionPointToPlane(point, wall_normal, lower_walls[i].min, 1.1);
+      }
+    } else {
+       res = CheckCollisionPointToPlane(point, wall_normal, lower_walls[i].min, 1.1);
+    }
+
+    if(res == 1){
+      return 1;
+    }
+  }
+
 
   /* std::cout << c1 << c2 << c3 << c4 << "\n"; */
   //if at leat one collision, the player cant move
-  return c1 || c2 || c3 || c4;
+  return 0;
 
 }
 
