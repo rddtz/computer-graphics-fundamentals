@@ -171,9 +171,8 @@ std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_posit
   }
 
   point = camera_position + intersection_point*view_vector;
-  if(point.y > lower_walls[index].max.y || camera_position.y > lower_walls[index].max.y || intersection_point == 100000){
 
-    usingLowers = false;
+  if(point.y > lower_walls[index].max.y || intersection_point == 100000){
 
     intersection_point = 10000;
     index = 0;
@@ -289,10 +288,28 @@ int CheckCollisionPointWalls(glm::vec4 point){
 
     glm::vec4 wall_normal = GetNormal(higher_walls[i]);
 
-    int res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 1.1);
+    int res = 0;
 
-    if(res == 1){
-      return 1;
+    if(point.y >= higher_walls[i].min.y && point.y <= higher_walls[i].max.y){
+
+      float maxx = std::max(higher_walls[i].max.x, higher_walls[i].min.x);
+      float minx = std::min(higher_walls[i].max.x, higher_walls[i].min.x);
+      float maxz = std::max(higher_walls[i].max.z, higher_walls[i].min.z);
+      float minz = std::min(higher_walls[i].max.z, higher_walls[i].min.z);
+
+      if(abs(wall_normal.z) >= 0.001f){
+	if(point.x >= minx && point.y <= maxx){
+	  res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 1.1);
+	}
+      } else {
+	if(point.z >= minz && point.z <= maxz){
+	  res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 1.1);
+	}
+      }
+
+      if(res == 1){
+	return 1;
+      }
     }
   }
 
@@ -302,6 +319,7 @@ int CheckCollisionPointWalls(glm::vec4 point){
     glm::vec4 wall_normal = GetNormal(lower_walls[i]);
 
     int res = 0;
+
     if(abs(wall_normal).z > 0.001){
 
       if(point.y < lower_walls[i].max.y){
