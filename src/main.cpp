@@ -400,7 +400,7 @@ int main(int argc, char* argv[]) {
     }
 
     cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
-    if(!CheckCollisionPointFloor(cam_temp)){
+    if (!CheckCollisionPointFloor(cam_temp)) {
       camera_position_c = cam_temp;
     }
 
@@ -495,7 +495,8 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
   glm::vec4 portal_normal = GetNormal(portal);
 
   glm::vec4 new_position =
-    glm::vec4((portal.max.x + portal.min.x) / 2.0f, (portal.max.y + portal.min.y)/2.0f,
+      glm::vec4((portal.max.x + portal.min.x) / 2.0f,
+                (portal.max.y + portal.min.y) / 2.0f,
                 (portal.max.z + portal.min.z) / 2.0f, 1.0f);
 
   *camera = new_position + 2.0f * (portal_normal / norm(portal_normal));
@@ -625,7 +626,8 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
   float normal_x = surface_normal.x;
   float normal_z = surface_normal.z;
 
-  if(colision_point.x == -1 && colision_point.y == -1 && colision_point.z == -1 && colision_point.w == -1){
+  if (colision_point.x == -1 && colision_point.y == -1 &&
+      colision_point.z == -1 && colision_point.w == -1) {
     return;
   }
 
@@ -718,4 +720,20 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       orangePortalPosition.x -= delta_wall;
     }
   }
+}
+
+glm::vec4 interpolate(float t, glm::vec4 point_a, glm::vec4 point_b) {
+  return point_a + t * (point_b - point_a);
+}
+
+glm::vec4 calculateBezierCurve(int t, glm::vec4 point_a, glm::vec4 point_b,
+                               glm::vec4 point_c, glm::vec4 point_d) {
+  glm::vec4 ab = interpolate(t, point_a, point_b);
+  glm::vec4 bc = interpolate(t, point_b, point_c);
+  glm::vec4 cd = interpolate(t, point_c, point_d);
+
+  glm::vec4 abc = interpolate(t, ab, bc);
+  glm::vec4 bcd = interpolate(t, bc, cd);
+
+  return interpolate(t, abc, bcd);
 }
