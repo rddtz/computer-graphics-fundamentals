@@ -6,6 +6,18 @@ layout (location = 0) in vec4 model_coefficients;
 layout (location = 1) in vec4 normal_coefficients;
 layout (location = 2) in vec2 texture_coefficients;
 
+#define SPHERE 0
+#define BUNNY 1
+#define WALL 2
+#define PORTALGUN 3
+#define FLOOR 4
+#define CUBE 5
+#define BLUE_PORTAL 10
+#define ORANGE_PORTAL 11
+#define GOURAUD_SHADING 20
+uniform int object_id;
+
+
 // Matrizes computadas no código C++ e enviadas para a GPU
 uniform mat4 model;
 uniform mat4 view;
@@ -19,9 +31,46 @@ out vec4 position_world;
 out vec4 position_model;
 out vec4 normal;
 out vec2 texcoords;
+out vec4 cor_v;
 
 void main()
 {
+    if(object_id == GOURAUD_SHADING){
+        gl_Position = projection * view * model * model_coefficients;
+        position_world = model * model_coefficients;
+        position_model = model_coefficients;
+
+        normal = inverse(transpose(model)) * normal_coefficients;
+        normal.w = 0.0;
+
+        texcoords = texture_coefficients;
+
+        vec3 Kd = vec3(0.678, 0.678, 0.059);
+        vec3 Ks = vec3(0.8, 0.8, 0.8);
+        vec3 Ka = Kd / 2;
+        float q = 80.0;
+
+        vec4 origin = vec4(0.0, 0.0, 0.0, 1.0);
+        vec4 camera_position = inverse(view) * origin;
+
+        vec4 p = position_world;
+
+        vec4 l = normalize(vec4(1.0,1.0,0.5,0.0));
+
+        vec4 v = normalize(camera_position - p);
+
+        vec4 h = normalize(v + l);
+
+        float lambert = max(0,dot(normal,l));
+
+        vec3 Ia = vec3(0.2, 0.2, 0.2);
+
+        vec3 cor_vertice = lambert * Kd + Ka * Ia + Ks * max(0, pow(dot(normal,h),q));
+        cor_v.r = cor_vertice.r;
+        cor_v.g = cor_vertice.g;
+        cor_v.b = cor_vertice.b;
+        cor_v.a = 1;
+    } else{
     // A variável gl_Position define a posição final de cada vértice
     // OBRIGATORIAMENTE em "normalized device coordinates" (NDC), onde cada
     // coeficiente estará entre -1 e 1 após divisão por w.
@@ -63,5 +112,6 @@ void main()
 
     // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
     texcoords = texture_coefficients;
+    }
 }
 

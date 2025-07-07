@@ -23,6 +23,7 @@ glm::vec4 calculateBezierCurve(float t, glm::vec4 point_a, glm::vec4 point_b,
 #define CUBE 5
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
+#define GOURAUD_SHADING 20
 
 #define NORTH 0
 #define SOUTH 1
@@ -468,6 +469,7 @@ int main(int argc, char* argv[]) {
                       Matrix_Scale(0.3, 0.3, 0.3);
     DrawObject(model, "PortalGun", PORTALGUN);
 
+    glClear(GL_DEPTH_BUFFER_BIT);
     model = T_view * Matrix_Translate(0.0, 0.0, -2.5) *
             Matrix_Scale(0.05, 0.05, 0.05);
     DrawObject(model, "the_sphere", SPHERE);
@@ -639,6 +641,10 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   model = Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) *
           Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
+
+  // Drawing the sphere
+  model = Matrix_Translate(-1.0f, 2.0f, 20.0f);
+  DrawObject(model, "the_sphere", GOURAUD_SHADING);
 }
 
 void LoadTextures() {

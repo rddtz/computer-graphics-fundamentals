@@ -7,6 +7,8 @@
 in vec4 position_world;
 in vec4 normal;
 
+in vec4 cor_v;
+
 // Posição do vértice atual no sistema de coordenadas local do modelo.
 in vec4 position_model;
 
@@ -20,12 +22,14 @@ uniform mat4 projection;
 
 // Identificador que define qual objeto está sendo desenhado no momento
 #define SPHERE 0
-#define BUNNY  1
-#define WALL  2
+#define BUNNY 1
+#define WALL 2
 #define PORTALGUN 3
 #define FLOOR 4
+#define CUBE 5
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
+#define GOURAUD_SHADING 20
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -187,6 +191,8 @@ void main()
         color.rgb = Kd2;
     } else if (object_id == FLOOR){
         color.rgb = Kd2;
+    } else if(object_id == GOURAUD_SHADING){
+        color = cor_v;
     } else{
         color.rgb = vec3(0.0,0.0,0.0);
     }
