@@ -5,9 +5,9 @@
 void LoadTextures();  // Function to Load the texture from images
 void DrawObject(glm::mat4 model, const char* name,
                 int id);  // Function to draw the object in the screen
-void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
-                  GLuint orangePortalTexture);  // Function to draw the map
-                                                // without the portals
+void sceneObjects(glm::mat4 view, glm::mat4 projection,
+                  glm::mat4 T_view);  // Function to draw the map
+                                      // without the portals
 void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
                           int portal_color);
 void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
   glCullFace(GL_BACK);
   glFrontFace(GL_CCW);
 
-  glm::vec4 camera_position_c = glm::vec4(0.0f, 2.5f, 15.0f, 1.0f);
+  glm::vec4 camera_position_c = glm::vec4(0.0f, 2.5f, 25.0f, 1.0f);
   float speed = 5.5f;
   float prev_time = (float)glfwGetTime();
 
@@ -237,7 +237,7 @@ int main(int argc, char* argv[]) {
       glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
                          glm::value_ptr(projection));
 
-      sceneObjects(view, projection, T_view, orangePortalTexture);
+      sceneObjects(view, projection, T_view);
 
       glActiveTexture(GL_TEXTURE10);
       glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
@@ -285,7 +285,7 @@ int main(int argc, char* argv[]) {
       glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
                          glm::value_ptr(projection));
 
-      sceneObjects(view, projection, T_view, orangePortalTexture);
+      sceneObjects(view, projection, T_view);
 
       glActiveTexture(GL_TEXTURE10);
       glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
@@ -403,7 +403,7 @@ int main(int argc, char* argv[]) {
     }
 
     cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
-    if(!CheckCollisionPointFloor(cam_temp)){
+    if (!CheckCollisionPointFloor(cam_temp)) {
       camera_position_c = cam_temp;
     }
 
@@ -428,7 +428,7 @@ int main(int argc, char* argv[]) {
       projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
     }
 
-    sceneObjects(view, projection, T_view, orangePortalTexture);
+    sceneObjects(view, projection, T_view);
 
     glActiveTexture(GL_TEXTURE10);
     glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
@@ -503,7 +503,8 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
   glm::vec4 portal_normal = GetNormal(portal);
 
   glm::vec4 new_position =
-    glm::vec4((portal.max.x + portal.min.x) / 2.0f, (portal.max.y + portal.min.y)/2.0f,
+      glm::vec4((portal.max.x + portal.min.x) / 2.0f,
+                (portal.max.y + portal.min.y) / 2.0f,
                 (portal.max.z + portal.min.z) / 2.0f, 1.0f);
 
   *camera = new_position + 2.0f * (portal_normal / norm(portal_normal));
@@ -547,8 +548,7 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
     }
   }
 }
-void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
-                  GLuint orangePortalTexture) {
+void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   glm::mat4 model = Matrix_Identity();
 
   glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
@@ -647,7 +647,8 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
   float normal_x = surface_normal.x;
   float normal_z = surface_normal.z;
 
-  if(colision_point.x == -1 && colision_point.y == -1 && colision_point.z == -1 && colision_point.w == -1){
+  if (colision_point.x == -1 && colision_point.y == -1 &&
+      colision_point.z == -1 && colision_point.w == -1) {
     return;
   }
 
@@ -740,4 +741,20 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
       orangePortalPosition.x -= delta_wall;
     }
   }
+}
+
+glm::vec4 interpolate(float t, glm::vec4 point_a, glm::vec4 point_b) {
+  return point_a + t * (point_b - point_a);
+}
+
+glm::vec4 calculateBezierCurve(int t, glm::vec4 point_a, glm::vec4 point_b,
+                               glm::vec4 point_c, glm::vec4 point_d) {
+  glm::vec4 ab = interpolate(t, point_a, point_b);
+  glm::vec4 bc = interpolate(t, point_b, point_c);
+  glm::vec4 cd = interpolate(t, point_c, point_d);
+
+  glm::vec4 abc = interpolate(t, ab, bc);
+  glm::vec4 bcd = interpolate(t, bc, cd);
+
+  return interpolate(t, abc, bcd);
 }
