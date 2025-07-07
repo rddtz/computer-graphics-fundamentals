@@ -170,9 +170,11 @@ int main(int argc, char* argv[]) {
   BuildTrianglesAndAddToVirtualScene(&planemodel);
 
   ObjModel gunmodel("../../textures/portalgun/portalgun.obj");
+  ComputeNormals(&gunmodel);
   BuildTrianglesAndAddToVirtualScene(&gunmodel);
 
   ObjModel wallmodel("../../data/wall.obj");
+  ComputeNormals(&wallmodel);
   BuildTrianglesAndAddToVirtualScene(&wallmodel);
   SetWallsInfo();
 
@@ -254,7 +256,7 @@ int main(int argc, char* argv[]) {
 
       model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
                                camera_position_c.z) *
-              Matrix_Rotate_Y(g_CameraTheta + 3.141592/2);
+              Matrix_Rotate_Y(g_CameraTheta + 3.141592 / 2);
       DrawObject(model, "the_bunny", BUNNY);
 
       // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
@@ -308,10 +310,9 @@ int main(int argc, char* argv[]) {
 
       model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
                                camera_position_c.z) *
-              Matrix_Rotate_Y(g_CameraTheta + 3.141592/2);
+              Matrix_Rotate_Y(g_CameraTheta + 3.141592 / 2);
       DrawObject(model, "the_bunny", BUNNY);
-
-    } 
+    }
     //// ORIGINAL :
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);

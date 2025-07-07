@@ -172,7 +172,13 @@ void main()
 
         color.rgb = lambert * Kd + Ka * Ia + Ks * max(0, pow(dot(n,h),q));
     } else if (object_id == PORTALGUN){
-        color.rgb = Kd3;
+        vec3 Kd = vec3(0.678, 0.678, 0.059);
+        vec3 Ks = vec3(0.8, 0.8, 0.8);
+        vec3 Ka = Kd / 2;
+        float q = 80.0;
+
+        vec4 h = normalize(v + l);
+        color.rgb = Kd3 + Ks * max(0, pow(dot(n,h),q));
     } else if(object_id == ORANGE_PORTAL){
         color.rgb = KdOP * 0.5 + vec3(0.996, 0.318, 0.027) * 0.5;  
     } else if(object_id == BLUE_PORTAL){
