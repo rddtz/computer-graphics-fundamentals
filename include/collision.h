@@ -171,16 +171,7 @@ std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_posit
   }
 
   point = camera_position + intersection_point*view_vector;
-
-  if(intersection_point == 10000){
-    return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
-  }
-
-  if(point.y < lower_walls[index].min.y){
-    return {glm::vec4(-1,-1,-1,-1), glm::vec4(-1,-1,-1,-1)};
-  }
-
-  if(point.y > lower_walls[index].max.y){
+  if(point.y > lower_walls[index].max.y || camera_position.y > lower_walls[index].max.y || intersection_point == 100000){
 
     usingLowers = false;
 
