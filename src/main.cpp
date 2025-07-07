@@ -311,10 +311,7 @@ int main(int argc, char* argv[]) {
               Matrix_Rotate_Y(g_CameraTheta + 3.141592/2);
       DrawObject(model, "the_bunny", BUNNY);
 
-    } else {
-      // Texturas dos portais nulas
-    }
-
+    } 
     //// ORIGINAL :
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
