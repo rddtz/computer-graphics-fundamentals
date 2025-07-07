@@ -27,17 +27,17 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
 #define EAST 2
 #define WEST 3
 
-glm::vec4 bluePortalPosition = glm::vec4(5.0f, 2.0f, 0.0f, 1.0f);
+glm::vec4 bluePortalPosition = glm::vec4(1000.0f, 1000.0f, 1000.0f, 1000.0f);
 glm::mat4 bluePortalRotation = Matrix_Rotate_Y(-3.141592 / 2);
 glm::vec4 bluePortalLooksAt = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
 int bluePortalSeesDirection = SOUTH;
-bool isBluePortalActive = true;
+bool isBluePortalActive = false;
 
-glm::vec4 orangePortalPosition = glm::vec4(0.0f, 2.0f, -5.0f, 1.0f);
+glm::vec4 orangePortalPosition = glm::vec4(1000.0f, 1000.0f, 1000.0f, 1.0f);
 glm::mat4 orangePortalRotation = Matrix_Identity();
 glm::vec4 orangePortalLooksAt = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
 int orangePortalSeesDirection = WEST;
-bool isOrangePortalActive = true;
+bool isOrangePortalActive = false;
 
 int main(int argc, char* argv[]) {
   int success = glfwInit();
@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
   glCullFace(GL_BACK);
   glFrontFace(GL_CCW);
 
-  glm::vec4 camera_position_c = glm::vec4(0.0f, 2.5f, 5.0f, 1.0f);
+  glm::vec4 camera_position_c = glm::vec4(0.0f, 2.5f, 15.0f, 1.0f);
   float speed = 5.5f;
   float prev_time = (float)glfwGetTime();
 
@@ -384,6 +384,7 @@ int main(int argc, char* argv[]) {
 
       UpdatePortalPosition(collisionResult.first, collisionResult.second,
                            BLUE_PORTAL);
+      isBluePortalActive = true;
     }
 
     if (g_RightMouseButtonPressed) {
@@ -397,6 +398,8 @@ int main(int argc, char* argv[]) {
 
       UpdatePortalPosition(collisionResult.first, collisionResult.second,
                            ORANGE_PORTAL);
+
+      isOrangePortalActive = true;
     }
 
     cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
@@ -481,6 +484,11 @@ int main(int argc, char* argv[]) {
 
 void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
                         int portal_color) {
+
+  if(!isBluePortalActive || !isOrangePortalActive){
+    return;
+  }
+
   BoundingBox portalPoints = {
       glm::vec4(g_VirtualScene["the_portal"].bbox_min.x,
                 g_VirtualScene["the_portal"].bbox_min.y,
@@ -587,6 +595,20 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view,
   model = Matrix_Translate(-30.0, 0.0f, 30.0f) *
           Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
+
+
+  model = Matrix_Translate(-30.0, 20.0f, -10.0f) *
+    Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
+  DrawObject(model, "the_wall", WALL);
+
+  model = Matrix_Translate(-30.0, 20.0f, 10.0f) *
+    Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
+  DrawObject(model, "the_wall", WALL);
+
+  model = Matrix_Translate(-30.0, 20.0f, -30.0f) *
+    Matrix_Rotate_X(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f);
+  DrawObject(model, "the_wall", WALL);
+
 
   // Lower walls
 

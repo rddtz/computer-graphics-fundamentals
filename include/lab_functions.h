@@ -752,7 +752,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     //   Se apertar tecla Z       então g_AngleZ += delta;
     //   Se apertar tecla shift+Z então g_AngleZ -= delta;
 
-    float delta = 3.141592 / 16; // 22.5 graus, em radianos.
+    /* float delta = 3.141592 / 16; // 22.5 graus, em radianos. */
 
     /* if (key == GLFW_KEY_X && action == GLFW_PRESS) */
     /* { */
