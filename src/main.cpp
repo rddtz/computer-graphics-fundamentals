@@ -1,6 +1,6 @@
-#include "collision.h"      // Collision functions
 #include "configs.h"        // Globals variables, includes and structs
 #include "lab_functions.h"  // Functions defined in the labs
+#include "collision.h"      // Collision functions
 
 void LoadTextures();  // Function to Load the texture from images
 void DrawObject(glm::mat4 model, const char* name,
@@ -410,8 +410,20 @@ int main(int argc, char* argv[]) {
     }
 
     cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
-    if (!CheckCollisionPointFloor(cam_temp)) {
+    if (!CheckCollisionPointFloor(cam_temp) && !g_Jumping) {
       camera_position_c = cam_temp;
+    }
+
+    if(g_Space_Pressed && !g_Jumping && CheckCollisionPointFloor(cam_temp)){
+      g_Jumping = true;
+      g_Jump_Time = 0.5;
+    }
+
+    if(g_Jump_Time > 0){
+      camera_position_c = camera_position_c + glm::vec4(0, speed * delta_t, 0, 0);
+      g_Jump_Time = g_Jump_Time - delta_t;
+    } else {
+      g_Jumping = false;
     }
 
     //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -582,7 +594,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   glm::vec4 pointC = glm::vec4(21.79f, 10.36f, -4.79f, 1.0f);
   glm::vec4 pointD = glm::vec4(0.0f, 13.0f, -2.2f, 1.0f);
 
-  glm::vec4 bezierPoint = calculateBezierCurve( 
+  glm::vec4 bezierPoint = calculateBezierCurve(
       (sin(0.2 * glfwGetTime()) + 1) / 2, pointA, pointB, pointC, pointD);
 
   model = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) * Matrix_Scale(2.0f, 0.2f, 2.0f);

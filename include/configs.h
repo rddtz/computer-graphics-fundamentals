@@ -55,7 +55,6 @@ struct SceneObject
     glm::vec3    bbox_max;
 };
 
-
 struct ObjModel
 {
     tinyobj::attrib_t                 attrib;
@@ -144,9 +143,14 @@ bool g_KeyS_Pressed = false;
 // no momento atual. Veja função KeyCallback();
 bool g_KeyD_Pressed = false;
 
+
 // "g_KeyW_Pressed = true" se o usuário está com a tecla A do teclado pressionada
 // no momento atual. Veja função KeyCallback();
 bool g_KeyA_Pressed = false;
+
+bool g_Space_Pressed = false;
+float g_Jump_Time;
+bool g_Jumping;
 
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição

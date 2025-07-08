@@ -773,16 +773,16 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     /* } */
 
     // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
-    /* if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) */
-    /* { */
-    /*     g_AngleX = 0.0f; */
-    /*     g_AngleY = 0.0f; */
-    /*     g_AngleZ = 0.0f; */
-    /*     g_ForearmAngleX = 0.0f; */
-    /*     g_ForearmAngleZ = 0.0f; */
-    /*     g_TorsoPositionX = 0.0f; */
-    /*     g_TorsoPositionY = 0.0f; */
-    /* } */
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+    {
+      g_Space_Pressed = true;
+    }
+
+    if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
+    {
+	g_Space_Pressed = false;
+    }
+
 
     // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
     /* if (key == GLFW_KEY_P && action == GLFW_PRESS) */
