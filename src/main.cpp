@@ -174,16 +174,14 @@ int main(int argc, char* argv[]) {
   ComputeNormals(&gunmodel);
   BuildTrianglesAndAddToVirtualScene(&gunmodel);
 
+  ObjModel cubemodel("../../data/the_cube.obj");
+  ComputeNormals(&cubemodel);
+  BuildTrianglesAndAddToVirtualScene(&cubemodel);
+
   ObjModel wallmodel("../../data/wall.obj");
   ComputeNormals(&wallmodel);
   BuildTrianglesAndAddToVirtualScene(&wallmodel);
   SetWallsInfo();
-
-  ObjModel player("../../data/important/78662.obj");
-  ComputeNormals(&player);
-  BuildTrianglesAndAddToVirtualScene(&player);
-
-  PrintObjModelInfo(&player);
 
   if (argc > 1) {
     ObjModel model(argv[1]);
@@ -573,27 +571,25 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
           Matrix_Rotate_X(0.2f) *
     Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
   DrawObject(model, "the_sphere", SPHERE);
-  //   * Matrix_Scale(0.1, 0.1, 0.1);
-  // DrawObject(model, "Tux-printable_0", PLAYER);
-  // DrawObject(model, "Tux-printable_1", PLAYER);
-  // DrawObject(model, "Tux-printable_2", PLAYER);
 
   // Drawing the bunny
   model = Matrix_Translate(1.0f, 2.0f, 0.0f) *
           Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
   DrawObject(model, "the_bunny", BUNNY);
 
-  glm::vec4 pointA = glm::vec4(-29.0f, -20.0f, -9.5f, 1.0f);
-  glm::vec4 pointB = glm::vec4(18.55f, -21.78f, 0.0f, 1.0f);
-  glm::vec4 pointC = glm::vec4(-55.38f, 19.38f, 0.0f, 1.0f);
-  glm::vec4 pointD = glm::vec4(29.0f, -0.5f, 9.0f, 1.0f);
+  glm::vec4 pointA = glm::vec4(27.75f, 0.0f, -9.75f, 1.0f);
+  glm::vec4 pointB = glm::vec4(5.91f, 5.79f, -8.95f, 1.0f);
+  glm::vec4 pointC = glm::vec4(21.79f, 10.36f, -4.79f, 1.0f);
+  glm::vec4 pointD = glm::vec4(0.0f, 13.0f, -2.2f, 1.0f);
 
-  glm::vec4 bezierPoint = calculateBezierCurve(
-      (sin(0.1 * glfwGetTime()) + 1) / 2, pointA, pointB, pointC, pointD);
+  glm::vec4 bezierPoint = calculateBezierCurve( 
+      (sin(0.2 * glfwGetTime()) + 1) / 2, pointA, pointB, pointC, pointD);
 
-  model = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) *
-          Matrix_Rotate_Y(3.141592 / 2) * Matrix_Scale(0.5, 0.5, 0.5);
-  DrawObject(model, "the_bunny", BUNNY);
+  model = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) * Matrix_Scale(2.0f, 0.2f, 2.0f);
+  DrawObject(model, "cube", BUNNY);
+
+  model = Matrix_Translate(0.0f, 13.0f, 0.0f) * Matrix_Scale(2.0f, 0.2f, 2.0f);
+  DrawObject(model, "cube", BUNNY);
 
   // Higher walls
   model =
@@ -658,7 +654,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
 
   // Drawing the sphere
   model = Matrix_Translate(-1.0f, 2.0f, 20.0f);
-  DrawObject(model, "the_sphere", GOURAUD_SHADING);
+  DrawObject(model, "cube", GOURAUD_SHADING);
 }
 
 void LoadTextures() {
@@ -666,10 +662,6 @@ void LoadTextures() {
   LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif");
   LoadTextureImage("../../data/portalwall.png");
   LoadTextureImage("../../textures/portalgun/textures/portalgun_col.jpg");
-  LoadTextureImage("../../data/platform/Platform1_D.png");
-  LoadTextureImage("../../data/platform/Platform1_S.png");
-  LoadTextureImage("../../data/platform/Platform1_N.png");
-  LoadTextureImage("../../data/platform/Platform2_D.png");
 }
 
 void DrawObject(glm::mat4 model, const char* name, int id) {
