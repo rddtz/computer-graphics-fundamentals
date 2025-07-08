@@ -42,6 +42,9 @@ glm::vec4 orangePortalLooksAt = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
 int orangePortalSeesDirection = WEST;
 bool isOrangePortalActive = false;
 
+glm::vec4 cubePosition = glm::vec4(0.5f, 13.5f, 0.5f, 1.0f);
+bool isFloorButtonPressed = false;
+
 int main(int argc, char* argv[]) {
   int success = glfwInit();
   if (!success) {
@@ -589,7 +592,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
           Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
   DrawObject(model, "the_bunny", BUNNY);
 
-  glm::vec4 pointA = glm::vec4(27.75f, 0.0f, -9.75f, 1.0f);
+  glm::vec4 pointA = glm::vec4(27.75f, -0.2f, -9.75f, 1.0f);
   glm::vec4 pointB = glm::vec4(5.91f, 5.79f, -8.95f, 1.0f);
   glm::vec4 pointC = glm::vec4(21.79f, 10.36f, -4.79f, 1.0f);
   glm::vec4 pointD = glm::vec4(0.0f, 13.0f, -2.2f, 1.0f);
@@ -602,6 +605,18 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
 
   model = Matrix_Translate(0.0f, 13.0f, 0.0f) * Matrix_Scale(2.0f, 0.2f, 2.0f);
   DrawObject(model, "cube", BUNNY);
+
+  // Button
+  model = Matrix_Translate(-20.0f, 0.0f, 25.0f) * Matrix_Scale(2.0f, 0.2f, 2.0f);
+  DrawObject(model, "cube", BUNNY);
+
+  // Box
+  model = Matrix_Translate(cubePosition.x, cubePosition.y, cubePosition.z);
+  DrawObject(model, "cube", GOURAUD_SHADING);
+
+  // Exit door
+  model = Matrix_Translate(-3.0f, 0.0f, -29.99f) * Matrix_Scale(1.0f, 2.0f, 1.0f);
+  DrawObject(model, "the_wall", BUNNY);
 
   // Higher walls
   model =
@@ -664,9 +679,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
           Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
 
-  // Drawing the sphere
-  model = Matrix_Translate(-1.0f, 2.0f, 20.0f);
-  DrawObject(model, "cube", GOURAUD_SHADING);
+ 
 }
 
 void LoadTextures() {
