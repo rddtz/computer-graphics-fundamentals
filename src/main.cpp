@@ -20,7 +20,7 @@ glm::vec4 calculateBezierCurve(float t, glm::vec4 point_a, glm::vec4 point_b,
 #define WALL 2
 #define PORTALGUN 3
 #define FLOOR 4
-#define CUBE 5
+#define PLAYER 5
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
 #define GOURAUD_SHADING 20
@@ -178,6 +178,12 @@ int main(int argc, char* argv[]) {
   ComputeNormals(&wallmodel);
   BuildTrianglesAndAddToVirtualScene(&wallmodel);
   SetWallsInfo();
+
+  ObjModel player("../../data/important/78662.obj");
+  ComputeNormals(&player);
+  BuildTrianglesAndAddToVirtualScene(&player);
+
+  PrintObjModelInfo(&player);
 
   if (argc > 1) {
     ObjModel model(argv[1]);
@@ -380,10 +386,10 @@ int main(int argc, char* argv[]) {
     if (g_LeftMouseButtonPressed) {
       std::pair<glm::vec4, glm::vec4> collisionResult =
           CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
-      printf("POINT x: %f y: %f z: %f \n", collisionResult.first.x,
-             collisionResult.first.y, collisionResult.first.z);
-      printf("NORMAL x: %f y: %f z: %f \n", collisionResult.second.x,
-             collisionResult.second.y, collisionResult.second.z);
+      // printf("POINT x: %f y: %f z: %f \n", collisionResult.first.x,
+      //        collisionResult.first.y, collisionResult.first.z);
+      // printf("NORMAL x: %f y: %f z: %f \n", collisionResult.second.x,
+      //        collisionResult.second.y, collisionResult.second.z);
 
       UpdatePortalPosition(collisionResult.first, collisionResult.second,
                            BLUE_PORTAL);
@@ -394,10 +400,10 @@ int main(int argc, char* argv[]) {
       std::pair<glm::vec4, glm::vec4> collisionResult =
           CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
 
-      printf("POINT x: %f y: %f z: %f \n", collisionResult.first.x,
-             collisionResult.first.y, collisionResult.first.z);
-      printf("NORMAL x: %f y: %f z: %f \n", collisionResult.second.x,
-             collisionResult.second.y, collisionResult.second.z);
+      // printf("POINT x: %f y: %f z: %f \n", collisionResult.first.x,
+      //        collisionResult.first.y, collisionResult.first.z);
+      // printf("NORMAL x: %f y: %f z: %f \n", collisionResult.second.x,
+      //        collisionResult.second.y, collisionResult.second.z);
 
       UpdatePortalPosition(collisionResult.first, collisionResult.second,
                            ORANGE_PORTAL);
@@ -431,6 +437,10 @@ int main(int argc, char* argv[]) {
       projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
     }
 
+    if(CheckCollisionPointToAABB(g_VirtualScene["the_sphere"], Matrix_Translate(-1.0f, 2.0f, 20.0f), camera_position_c)){
+      printf("Esta colidindo com a esfera\n");
+    }
+
     sceneObjects(view, projection, T_view);
 
     glActiveTexture(GL_TEXTURE10);
@@ -455,12 +465,12 @@ int main(int argc, char* argv[]) {
     DrawObject(modelOrangePortal, "the_portal", ORANGE_PORTAL);
 
     if (CheckCollisionPlayerPortal(camera_position_c, modelBluePortal)) {
-      printf("Colidiu com o portal azul\n");
+      // printf("Colidiu com o portal azul\n");
       MovePlayerToPortal(&camera_position_c, modelOrangePortal, ORANGE_PORTAL);
     }
 
     if (CheckCollisionPlayerPortal(camera_position_c, modelOrangePortal)) {
-      printf("Colidiu com o portal laranja\n");
+      // printf("Colidiu com o portal laranja\n");
       MovePlayerToPortal(&camera_position_c, modelBluePortal, BLUE_PORTAL);
     }
 
@@ -561,8 +571,12 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   // Drawing the sphere
   model = Matrix_Translate(-1.0f, 2.0f, 0.0f) * Matrix_Rotate_Z(0.6f) *
           Matrix_Rotate_X(0.2f) *
-          Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+    Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
   DrawObject(model, "the_sphere", SPHERE);
+  //   * Matrix_Scale(0.1, 0.1, 0.1);
+  // DrawObject(model, "Tux-printable_0", PLAYER);
+  // DrawObject(model, "Tux-printable_1", PLAYER);
+  // DrawObject(model, "Tux-printable_2", PLAYER);
 
   // Drawing the bunny
   model = Matrix_Translate(1.0f, 2.0f, 0.0f) *
@@ -652,6 +666,10 @@ void LoadTextures() {
   LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif");
   LoadTextureImage("../../data/portalwall.png");
   LoadTextureImage("../../textures/portalgun/textures/portalgun_col.jpg");
+  LoadTextureImage("../../data/platform/Platform1_D.png");
+  LoadTextureImage("../../data/platform/Platform1_S.png");
+  LoadTextureImage("../../data/platform/Platform1_N.png");
+  LoadTextureImage("../../data/platform/Platform2_D.png");
 }
 
 void DrawObject(glm::mat4 model, const char* name, int id) {

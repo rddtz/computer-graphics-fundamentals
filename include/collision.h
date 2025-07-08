@@ -5,12 +5,17 @@
 
 glm::vec4 GetNormal(BoundingBox wall);
 
-int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane, float offset);
+// AABB point
 int CheckCollisionAABBtoAABB(SceneObject obj1, glm::mat4 transf1, SceneObject obj2, glm::mat4 transf2);
 int CheckCollisionAABBtoPlane(BoundingBox box, glm::vec4 pn, float pd);
+int CheckCollisionPointToAABB(SceneObject obj1, glm::mat4 transf1, glm::vec4 point);
 
+// Points Collision
 int CheckCollisionPointWalls(glm::vec4 point);
 int CheckCollisionPointFloor(glm::vec4 point);
+int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane, float offset);
+
+
 int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transform);
 
 std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector);
@@ -26,48 +31,6 @@ BoundingBox wallPoints;
 BoundingBox lower_walls[N_WALLS];
 BoundingBox higher_walls[N_WALLS];
 BoundingBox floors[N_FLOORS];
-
-void SetWallsInfo(){
-
-  wallPoints = {glm::vec4(g_VirtualScene["the_wall"].bbox_min.x, g_VirtualScene["the_wall"].bbox_min.y, g_VirtualScene["the_wall"].bbox_min.z, 1),
-		glm::vec4(g_VirtualScene["the_wall"].bbox_max.x, g_VirtualScene["the_wall"].bbox_max.y, g_VirtualScene["the_wall"].bbox_max.z, 1)};
-
-  higher_walls[0] =  {Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-		      Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
-
-  higher_walls[1] = {Matrix_Translate(-30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-		     Matrix_Translate(-30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
-
-  higher_walls[2] = {Matrix_Translate(30.0f, 0.0f, -30.0f) *  Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-		     Matrix_Translate(30.0f, 0.0f, -30.0f) *  Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
-
-  higher_walls[3] = {Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-		     Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
-
-
-  lower_walls[0] =  {Matrix_Translate(-30.0f, -20.0f, -10.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-		     Matrix_Translate(-30.0f, -20.0f, -10.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
-
-  lower_walls[1] = {Matrix_Translate(-30.0f, -20.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-		    Matrix_Translate(-30.0f, -20.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
-
-  lower_walls[2] = {Matrix_Translate(30.0f, -20.0f, -30.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-		    Matrix_Translate(30.0f, -20.0f, -30.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
-
-  lower_walls[3] = {Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-		    Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
-
-
-  floors[0] = {Matrix_Translate(-30.0, 0.0f, -10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-	       Matrix_Translate(-30.0, 0.0f, -10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
-
-  floors[1] = {Matrix_Translate(-30.0, -20.0f, 10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-	       Matrix_Translate(-30.0, -20.0f, 10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
-
-
-  floors[2] = {Matrix_Translate(-30.0, 0.0f, 30.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-	       Matrix_Translate(-30.0, 0.0f, 30.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
-}
 
 
 int CheckCollisionAABBtoAABB(SceneObject obj1, glm::mat4 transf1, SceneObject obj2, glm::mat4 transf2){
@@ -137,6 +100,21 @@ int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transfor
   return 0;
 
 }
+
+int CheckCollisionPointToAABB(SceneObject obj1, glm::mat4 transf1, glm::vec4 point){
+
+  BoundingBox aabb = {transf1 * glm::vec4(obj1.bbox_min.x, obj1.bbox_min.y, obj1.bbox_min.z, 1), transf1 * glm::vec4(obj1.bbox_max.x, obj1.bbox_max.y, obj1.bbox_max.z, 1)};
+
+  int collisionX = point.x >= aabb.min.x && aabb.max.x >= point.x;
+
+  int collisionY = point.y >= aabb.min.y && point.y <= aabb.max.y;
+
+  int collisionZ = point.z >= aabb.min.z && aabb.max.z >= point.z;
+
+  return collisionX && collisionY && collisionZ;
+
+}
+
 
 /* Using line-to-plane collision to check the gun shot into the wall */
 std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector){
@@ -278,6 +256,8 @@ int CheckCollisionPointFloor(glm::vec4 point){
     }
   }
 
+
+
   return 0;
 
 }
@@ -394,5 +374,49 @@ BoundingBox GetBboxModel(ObjModel* model, glm::mat4 transformation){
   return ret;
 
 }
+
+
+void SetWallsInfo(){
+
+  wallPoints = {glm::vec4(g_VirtualScene["the_wall"].bbox_min.x, g_VirtualScene["the_wall"].bbox_min.y, g_VirtualScene["the_wall"].bbox_min.z, 1),
+		glm::vec4(g_VirtualScene["the_wall"].bbox_max.x, g_VirtualScene["the_wall"].bbox_max.y, g_VirtualScene["the_wall"].bbox_max.z, 1)};
+
+  higher_walls[0] =  {Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		      Matrix_Translate(-30.0f, 0.0f, -30.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+  higher_walls[1] = {Matrix_Translate(-30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		     Matrix_Translate(-30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+  higher_walls[2] = {Matrix_Translate(30.0f, 0.0f, -30.0f) *  Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		     Matrix_Translate(30.0f, 0.0f, -30.0f) *  Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+  higher_walls[3] = {Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		     Matrix_Translate(30.0f, 0.0f, 30.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+
+  lower_walls[0] =  {Matrix_Translate(-30.0f, -20.0f, -10.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		     Matrix_Translate(-30.0f, -20.0f, -10.0f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+  lower_walls[1] = {Matrix_Translate(-30.0f, -20.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		    Matrix_Translate(-30.0f, -20.0f, 30.0f) * Matrix_Rotate_Y(3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+  lower_walls[2] = {Matrix_Translate(30.0f, -20.0f, -30.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		    Matrix_Translate(30.0f, -20.0f, -30.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+  lower_walls[3] = {Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		    Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+
+  floors[0] = {Matrix_Translate(-30.0, 0.0f, -10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+	       Matrix_Translate(-30.0, 0.0f, -10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+  floors[1] = {Matrix_Translate(-30.0, -20.0f, 10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+	       Matrix_Translate(-30.0, -20.0f, 10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+
+
+  floors[2] = {Matrix_Translate(-30.0, 0.0f, 30.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+	       Matrix_Translate(-30.0, 0.0f, 30.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+}
+
 
 #endif
