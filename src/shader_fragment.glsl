@@ -31,6 +31,10 @@ uniform mat4 projection;
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
 #define GOURAUD_SHADING 20
+#define DOOR 30
+#define BUTTON 31
+#define PLATFORM 32
+#define BOX 33
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -38,10 +42,13 @@ uniform vec4 bbox_min;
 uniform vec4 bbox_max;
 
 // Variáveis para acesso das imagens de textura
-uniform sampler2D TextureImage0;
-uniform sampler2D TextureImage1;
-uniform sampler2D TextureImage2;
-uniform sampler2D TextureImage3;
+uniform sampler2D DoorTexture;
+uniform sampler2D ButtonTexture;
+uniform sampler2D LabWallTexture;
+uniform sampler2D PortalGunTexture;
+uniform sampler2D PlatformTexture;
+uniform sampler2D BoxTexture;
+
 uniform sampler2D BluePortalTexture;
 uniform sampler2D OrangePortalTexture;
 
@@ -133,27 +140,24 @@ void main()
         U = (position_model.x - minx) / (maxx - minx);
         V = (position_model.y - miny) / (maxy - miny);
     }
-    else if ( object_id == WALL || object_id == FLOOR || object_id == BLUE_PORTAL || object_id == ORANGE_PORTAL)
-    {
-        // Coordenadas de textura do plano, obtidas do arquivo OBJ.
-        U = texcoords.x;
-        V = texcoords.y;
-    }
-       else if ( object_id == PORTALGUN || object_id == CUBE)
-    {
+    else {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
         U = texcoords.x;
         V = texcoords.y;
     }
 
-    // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-    vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
+    // Obtemos a refletância difusa a partir da leitura da imagem DoorTexture
+    vec3 KdDoor = texture(DoorTexture, vec2(U,V)).rgb;
     // e da imagem TextureImage1
-    vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
+    vec3 KdButton = texture(ButtonTexture, vec2(U,V)).rgb;
 
-    vec3 Kd2 = texture(TextureImage2, vec2(U,V)).rgb;
+    vec3 KdLabWall = texture(LabWallTexture, vec2(U,V)).rgb;
 
-    vec3 Kd3 = texture(TextureImage3, vec2(U,V)).rgb;
+    vec3 KdPortalGun = texture(PortalGunTexture, vec2(U,V)).rgb;
+
+    vec3 KdPlatform = texture(PlatformTexture, vec2(U,V)).rgb;
+
+    vec3 KdBox = texture(BoxTexture, vec2(U,V)).rgb;
 
     vec3 KdBP = texture(BluePortalTexture, vec2(U,V)).rgb;
 
@@ -162,11 +166,27 @@ void main()
     float lambert = max(0,dot(n,l));
 
     vec3 Ia = vec3(0.2, 0.2, 0.2);
+    if(object_id == DOOR){
+        color.rgb = KdDoor;
+    }
+    else if(object_id == BUTTON){
+        color.rgb = KdButton;
+    }
+    else if(object_id == PLATFORM){
+        color.rgb = KdPlatform;
+    }
+    else if(object_id == BOX){
+        color.rgb = KdBox;
+    }
+    else if ((object_id == SPHERE)){
+        vec3 Kd = vec3(0.678, 0.678, 0.059);
+        vec3 Ks = vec3(0.8, 0.8, 0.8);
+        vec3 Ka = Kd / 2;
+        float q = 80.0;
 
-    if ((object_id == SPHERE)){
-        // Equação de Iluminação
-        //          *** Cor da Terra         *** Luzes noturnas
-        color.rgb = Kd0 * (lambert + 0.01) + Kd1 * max(0,(1 - lambert * 4));
+        vec4 h = normalize(v + l);
+
+        color.rgb = lambert * Kd + Ka * Ia + Ks * max(0, pow(dot(n,h),q));
     } else if (object_id == BUNNY){
         vec3 Kd = vec3(0.678, 0.678, 0.059);
         vec3 Ks = vec3(0.8, 0.8, 0.8);
@@ -183,20 +203,20 @@ void main()
         float q = 80.0;
 
         vec4 h = normalize(v + l);
-        color.rgb = Kd3 + Ks * max(0, pow(dot(n,h),q));
+        color.rgb = KdPortalGun + Ks * max(0, pow(dot(n,h),q));
     } else if(object_id == ORANGE_PORTAL){
         color.rgb = KdOP * 0.5 + vec3(0.996, 0.318, 0.027) * 0.5;  
     } else if(object_id == BLUE_PORTAL){
         color.rgb = KdBP * 0.5 + vec3(0.325, 0.745, 0.937) * 0.5; 
     } else if (object_id == WALL){
-        color.rgb = Kd2;
+        color.rgb = KdLabWall;
     } else if (object_id == FLOOR){
-        color.rgb = Kd2;
+        color.rgb = KdLabWall;
     } else if(object_id == GOURAUD_SHADING){
         color = cor_v;
     } 
     else if(object_id == CUBE){
-        color.rgb = Kd0;
+        color.rgb = KdButton;
     }
     else{
         color.rgb = vec3(0.0,0.0,0.0);
