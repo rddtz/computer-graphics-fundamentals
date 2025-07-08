@@ -21,6 +21,7 @@ glm::vec4 calculateBezierCurve(float t, glm::vec4 point_a, glm::vec4 point_b,
 #define PORTALGUN 3
 #define FLOOR 4
 #define PLAYER 5
+#define CUBE 6
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
 #define GOURAUD_SHADING 20
@@ -495,7 +496,7 @@ int main(int argc, char* argv[]) {
             Matrix_Scale(0.05, 0.05, 0.05);
     DrawObject(model, "the_sphere", SPHERE);
 
-    if (g_KeyE_Pressed) {
+    if (g_KeyE_Toggled) {
       isFloorButtonPressed = true;
 
       boxPosition = camera_position_c + camera_view_vector -
@@ -623,7 +624,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
 
   // Box
   model = Matrix_Translate(boxPosition.x, boxPosition.y, boxPosition.z);
-  DrawObject(model, "cube", GOURAUD_SHADING);
+  DrawObject(model, "cube", CUBE);
 
   // Exit door
   model =
@@ -693,7 +694,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
 }
 
 void LoadTextures() {
-  LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");
+  LoadTextureImage("../../textures/Companion_Cube.jpg");
   LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif");
   LoadTextureImage("../../data/portalwall.png");
   LoadTextureImage("../../textures/portalgun/textures/portalgun_col.jpg");

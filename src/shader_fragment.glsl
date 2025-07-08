@@ -26,7 +26,8 @@ uniform mat4 projection;
 #define WALL 2
 #define PORTALGUN 3
 #define FLOOR 4
-#define CUBE 5
+#define PLAYER 5
+#define CUBE 6
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
 #define GOURAUD_SHADING 20
@@ -138,7 +139,7 @@ void main()
         U = texcoords.x;
         V = texcoords.y;
     }
-       else if ( object_id == PORTALGUN)
+       else if ( object_id == PORTALGUN || object_id == CUBE)
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
         U = texcoords.x;
@@ -193,7 +194,11 @@ void main()
         color.rgb = Kd2;
     } else if(object_id == GOURAUD_SHADING){
         color = cor_v;
-    } else{
+    } 
+    else if(object_id == CUBE){
+        color.rgb = Kd0;
+    }
+    else{
         color.rgb = vec3(0.0,0.0,0.0);
     }
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é

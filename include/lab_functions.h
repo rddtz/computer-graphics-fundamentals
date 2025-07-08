@@ -885,18 +885,13 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_E)
     {
         if (action == GLFW_PRESS)
-            // Usuário apertou a tecla E, então atualizamos o estado para pressionada
-            g_KeyE_Pressed = true;
+            g_KeyE_Toggled = !g_KeyE_Toggled;
 
-        else if (action == GLFW_RELEASE)
-            // Usuário largou a tecla E, então atualizamos o estado para NÃO pressionada
-            g_KeyE_Pressed = false;
+        else if (action == GLFW_RELEASE){
+            ;
+        }
 
         else if (action == GLFW_REPEAT)
-            // Usuário está segurando a tecla E e o sistema operacional está
-            // disparando eventos de repetição. Neste caso, não precisamos
-            // atualizar o estado da tecla, pois antes de um evento REPEAT
-            // necessariamente deve ter ocorrido um evento PRESS.
             ;
     }
 }

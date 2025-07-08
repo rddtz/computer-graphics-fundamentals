@@ -141,7 +141,7 @@ bool g_KeyD_Pressed = false;
 
 bool g_KeyA_Pressed = false;
 
-bool g_KeyE_Pressed = false;
+bool g_KeyE_Toggled = false;
 
 bool g_Space_Pressed = false;
 float g_Jump_Time;

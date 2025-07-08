@@ -6,14 +6,6 @@ layout (location = 0) in vec4 model_coefficients;
 layout (location = 1) in vec4 normal_coefficients;
 layout (location = 2) in vec2 texture_coefficients;
 
-#define SPHERE 0
-#define BUNNY 1
-#define WALL 2
-#define PORTALGUN 3
-#define FLOOR 4
-#define CUBE 5
-#define BLUE_PORTAL 10
-#define ORANGE_PORTAL 11
 #define GOURAUD_SHADING 20
 uniform int object_id;
 
