@@ -135,18 +135,13 @@ bool g_MiddleMouseButtonPressed = false; // Análogo para botão do meio do mous
 // no momento atual. Veja função KeyCallback();
 bool g_KeyW_Pressed = false;
 
-// "g_KeyW_Pressed = true" se o usuário está com a tecla S do teclado pressionada
-// no momento atual. Veja função KeyCallback();
 bool g_KeyS_Pressed = false;
 
-// "g_KeyW_Pressed = true" se o usuário está com a tecla D do teclado pressionada
-// no momento atual. Veja função KeyCallback();
 bool g_KeyD_Pressed = false;
 
-
-// "g_KeyW_Pressed = true" se o usuário está com a tecla A do teclado pressionada
-// no momento atual. Veja função KeyCallback();
 bool g_KeyA_Pressed = false;
+
+bool g_KeyE_Pressed = false;
 
 bool g_Space_Pressed = false;
 float g_Jump_Time;

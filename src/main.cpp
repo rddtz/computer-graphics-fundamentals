@@ -1,6 +1,6 @@
+#include "collision.h"      // Collision functions
 #include "configs.h"        // Globals variables, includes and structs
 #include "lab_functions.h"  // Functions defined in the labs
-#include "collision.h"      // Collision functions
 
 void LoadTextures();  // Function to Load the texture from images
 void DrawObject(glm::mat4 model, const char* name,
@@ -42,7 +42,7 @@ glm::vec4 orangePortalLooksAt = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
 int orangePortalSeesDirection = WEST;
 bool isOrangePortalActive = false;
 
-glm::vec4 cubePosition = glm::vec4(0.5f, 13.5f, 0.5f, 1.0f);
+glm::vec4 boxPosition = glm::vec4(0.5f, 13.5f, 0.5f, 1.0f);
 bool isFloorButtonPressed = false;
 
 int main(int argc, char* argv[]) {
@@ -205,11 +205,6 @@ int main(int argc, char* argv[]) {
 
   while (!glfwWindowShouldClose(window)) {
     glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-
-    if (g_MiddleMouseButtonPressed) {
-      UpdatePortalPosition(glm::vec4(15.0f, 3.0f, 30.0f, 1.0f),
-                           glm::vec4(0.0f, 0.0f, -1.0f, 0.0f), ORANGE_PORTAL);
-    }
 
     float nearplane = -0.5f;
     float farplane = -85.0f;
@@ -417,13 +412,14 @@ int main(int argc, char* argv[]) {
       camera_position_c = cam_temp;
     }
 
-    if(g_Space_Pressed && !g_Jumping && CheckCollisionPointFloor(cam_temp)){
+    if (g_Space_Pressed && !g_Jumping && CheckCollisionPointFloor(cam_temp)) {
       g_Jumping = true;
       g_Jump_Time = 0.5;
     }
 
-    if(g_Jump_Time > 0){
-      camera_position_c = camera_position_c + glm::vec4(0, speed * delta_t, 0, 0);
+    if (g_Jump_Time > 0) {
+      camera_position_c =
+          camera_position_c + glm::vec4(0, speed * delta_t, 0, 0);
       g_Jump_Time = g_Jump_Time - delta_t;
     } else {
       g_Jumping = false;
@@ -450,7 +446,9 @@ int main(int argc, char* argv[]) {
       projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
     }
 
-    if(CheckCollisionPointToAABB(g_VirtualScene["the_sphere"], Matrix_Translate(-1.0f, 2.0f, 20.0f), camera_position_c)){
+    if (CheckCollisionPointToAABB(g_VirtualScene["the_sphere"],
+                                  Matrix_Translate(-1.0f, 2.0f, 20.0f),
+                                  camera_position_c)) {
       printf("Esta colidindo com a esfera\n");
     }
 
@@ -496,6 +494,13 @@ int main(int argc, char* argv[]) {
     model = T_view * Matrix_Translate(0.0, 0.0, -2.5) *
             Matrix_Scale(0.05, 0.05, 0.05);
     DrawObject(model, "the_sphere", SPHERE);
+
+    if (g_KeyE_Pressed) {
+      isFloorButtonPressed = true;
+
+      boxPosition = camera_position_c + camera_view_vector -
+                    glm::vec4(0.5f, 0.5f, 0.5f, 0.0f);
+    }
 
     TextRendering_ShowFramesPerSecond(window);
 
@@ -584,7 +589,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   // Drawing the sphere
   model = Matrix_Translate(-1.0f, 2.0f, 0.0f) * Matrix_Rotate_Z(0.6f) *
           Matrix_Rotate_X(0.2f) *
-    Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+          Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
   DrawObject(model, "the_sphere", SPHERE);
 
   // Drawing the bunny
@@ -600,22 +605,29 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   glm::vec4 bezierPoint = calculateBezierCurve(
       (sin(0.2 * glfwGetTime()) + 1) / 2, pointA, pointB, pointC, pointD);
 
-  model = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) * Matrix_Scale(2.0f, 0.2f, 2.0f);
+  model = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) *
+          Matrix_Scale(2.0f, 0.2f, 2.0f);
   DrawObject(model, "cube", BUNNY);
 
   model = Matrix_Translate(0.0f, 13.0f, 0.0f) * Matrix_Scale(2.0f, 0.2f, 2.0f);
   DrawObject(model, "cube", BUNNY);
 
   // Button
-  model = Matrix_Translate(-20.0f, 0.0f, 25.0f) * Matrix_Scale(2.0f, 0.2f, 2.0f);
+  model =
+      Matrix_Translate(-20.0f, 0.0f, 25.0f) * Matrix_Scale(2.0f, 0.2f, 2.0f);
+
+  if (isFloorButtonPressed) {
+    model = Matrix_Translate(0.0f, -0.19f, 0.0f) * model;
+  }
   DrawObject(model, "cube", BUNNY);
 
   // Box
-  model = Matrix_Translate(cubePosition.x, cubePosition.y, cubePosition.z);
+  model = Matrix_Translate(boxPosition.x, boxPosition.y, boxPosition.z);
   DrawObject(model, "cube", GOURAUD_SHADING);
 
   // Exit door
-  model = Matrix_Translate(-3.0f, 0.0f, -29.99f) * Matrix_Scale(1.0f, 2.0f, 1.0f);
+  model =
+      Matrix_Translate(-3.0f, 0.0f, -29.99f) * Matrix_Scale(1.0f, 2.0f, 1.0f);
   DrawObject(model, "the_wall", BUNNY);
 
   // Higher walls
@@ -678,8 +690,6 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   model = Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) *
           Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
-
- 
 }
 
 void LoadTextures() {
