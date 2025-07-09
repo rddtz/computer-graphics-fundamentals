@@ -238,14 +238,31 @@ int main(int argc, char* argv[]) {
     float delta_t = current_time - prev_time;
     prev_time = current_time;
 
-    BoundingBox player = GetBoundingBoxObject("the_bunny");
-    glm::vec4 cam_temp = camera_position_c;
-    glm::mat4 modelPlayer = Matrix_Translate(cam_temp.x,
-					     cam_temp.y,
-					     cam_temp.z)
-      * Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+  glm::vec4 pointA = glm::vec4(27.75f, -0.2f, -9.0f, 1.0f);
+  glm::vec4 pointB = glm::vec4(5.91f, 5.79f, -8.95f, 1.0f);
+  glm::vec4 pointC = glm::vec4(21.79f, 10.36f, -4.79f, 1.0f);
+  glm::vec4 pointD = glm::vec4(0.0f, 13.0f, -3.5f, 1.0f);
 
-    player = {modelPlayer * player.min, modelPlayer * player.max};
+  glm::vec4 bezierPoint = calculateBezierCurve(
+      (sin(0.2 * glfwGetTime()) + 1) / 2, pointA, pointB, pointC, pointD);
+
+  // Moving platform
+  g_bezierModel = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) *
+          Matrix_Scale(0.025f, 0.025f, 0.025f);
+
+  BoundingBox platform = GetBoundingBoxObject("platform");
+
+  g_MovingPlatformDelta = glm::vec4((g_MovingPlatform.max.x + g_MovingPlatform.min.x)/2.0f,
+				    (g_MovingPlatform.max.y + g_MovingPlatform.min.y)/2.0f,
+				    (g_MovingPlatform.max.z + g_MovingPlatform.min.z)/2.0f,
+				    0);
+  g_MovingPlatform = {g_bezierModel * platform.min, g_bezierModel * platform.max};
+  g_MovingPlatformDelta = glm::vec4((g_MovingPlatform.max.x + g_MovingPlatform.min.x)/2.0f - g_MovingPlatformDelta.x,
+				    (g_MovingPlatform.max.y + g_MovingPlatform.min.y)/2.0f - g_MovingPlatformDelta.y,
+				    (g_MovingPlatform.max.z + g_MovingPlatform.min.z)/2.0f - g_MovingPlatformDelta.z,
+				    0);
+
+  printf("PD = (%f,%f,%f)\n", g_MovingPlatformDelta.x, g_MovingPlatformDelta.y, g_MovingPlatformDelta.z);
 
     if (isBluePortalActive && isOrangePortalActive) {
       // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
@@ -283,11 +300,6 @@ int main(int argc, char* argv[]) {
                          glm::value_ptr(projection));
 
       sceneObjects(view, projection, T_view);
-
-      if(CheckCollisionAABBtoAABB(player, g_MovingPlatform)){
-	camera_position_c = camera_position_c + g_MovingPlatformDelta;
-	printf("CAMERA = (%f,%f,%f)\n", camera_position_c.x, camera_position_c.y, camera_position_c.z);
-      }
 
       glActiveTexture(GL_TEXTURE10);
       glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
@@ -338,11 +350,6 @@ int main(int argc, char* argv[]) {
 
       sceneObjects(view, projection, T_view);
 
-      if(CheckCollisionAABBtoAABB(player, g_MovingPlatform)){
-	camera_position_c = camera_position_c + g_MovingPlatformDelta;
-	printf("CAMERA = (%f,%f,%f)\n", camera_position_c.x, camera_position_c.y, camera_position_c.z);
-      }
-
       glActiveTexture(GL_TEXTURE10);
       glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
       glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"),
@@ -387,7 +394,7 @@ int main(int argc, char* argv[]) {
 
     //  -=-=-=-=-=-=-=-=-=-=-=-=-=- USER INPUT HANDLING
     //  -=-=-=-=-=-=-=-=-=-=-=-=-=-
-    cam_temp = camera_position_c;
+    glm::vec4 cam_temp = camera_position_c;
 
     if (g_KeyW_Pressed) {
       cam_temp = camera_position_c;
@@ -452,9 +459,10 @@ int main(int argc, char* argv[]) {
     }
 
 
-    player = GetBoundingBoxObject("the_bunny");
+
+    BoundingBox player = GetBoundingBoxObject("the_bunny");
     cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
-    modelPlayer = Matrix_Translate(cam_temp.x,
+    glm::mat4 modelPlayer = Matrix_Translate(cam_temp.x,
 					     cam_temp.y,
 					     cam_temp.z)
       * Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
@@ -652,32 +660,8 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   else
     DrawObject(model, "the_sphere", GOURAUD_SHADING_RED);
 
-  glm::vec4 pointA = glm::vec4(27.75f, -0.2f, -9.0f, 1.0f);
-  glm::vec4 pointB = glm::vec4(5.91f, 5.79f, -8.95f, 1.0f);
-  glm::vec4 pointC = glm::vec4(21.79f, 10.36f, -4.79f, 1.0f);
-  glm::vec4 pointD = glm::vec4(0.0f, 13.0f, -3.5f, 1.0f);
-
-  glm::vec4 bezierPoint = calculateBezierCurve(
-      (sin(0.2 * glfwGetTime()) + 1) / 2, pointA, pointB, pointC, pointD);
-
-  // Moving platform
-  model = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) *
-          Matrix_Scale(0.025f, 0.025f, 0.025f);
-
-  BoundingBox platform = GetBoundingBoxObject("platform");
-
-  g_MovingPlatformDelta = glm::vec4((g_MovingPlatform.max.x + g_MovingPlatform.min.x)/2.0f,
-				    (g_MovingPlatform.max.y + g_MovingPlatform.min.y)/2.0f,
-				    (g_MovingPlatform.max.z + g_MovingPlatform.min.z)/2.0f,
-				    0);
-  g_MovingPlatform = {model * platform.min, model * platform.max};
-  g_MovingPlatformDelta = glm::vec4((g_MovingPlatform.max.x + g_MovingPlatform.min.x)/2.0f - g_MovingPlatformDelta.x,
-				    (g_MovingPlatform.max.y + g_MovingPlatform.min.y)/2.0f - g_MovingPlatformDelta.y,
-				    (g_MovingPlatform.max.z + g_MovingPlatform.min.z)/2.0f - g_MovingPlatformDelta.z,
-				    0);
-  printf("PD = (%f,%f,%f)\n", g_MovingPlatformDelta.x, g_MovingPlatformDelta.y, g_MovingPlatformDelta.z);
-
-  DrawObject(model, "platform", PLATFORM);
+  // moving platfmorm
+  DrawObject(g_bezierModel, "platform", PLATFORM);
 
   // Fixed platform
   model = Matrix_Translate(0.0f, 13.0f, 0.0f) *
