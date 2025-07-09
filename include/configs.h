@@ -117,6 +117,8 @@ std::map<std::string, SceneObject> g_VirtualScene;
 BoundingBox g_MovingPlatform;
 glm::vec4 g_MovingPlatformDelta;
 glm::mat4 g_bezierModel;
+bool g_OnMovingPlatform = false;
+bool g_PlayerOnGround = false;
 
 // Pilha que guardará as matrizes de modelagem.
 std::stack<glm::mat4>  g_MatrixStack;

@@ -50,10 +50,29 @@ BoundingBox GetBoundingBoxObject(const char* name){
   obj = {glm::vec4(minx, miny, minz, 1), glm::vec4(maxx, maxy, maxz, 1)};
 
   return obj;
+}
+
+
+BoundingBox RecalculatePoints(BoundingBox obj){
+
+  float maxx = std::max(obj.max.x, obj.min.x);
+  float maxy = std::max(obj.max.y, obj.min.y);
+  float maxz = std::max(obj.max.z, obj.min.z);
+
+  float minx = std::min(obj.max.x, obj.min.x);
+  float miny = std::min(obj.max.y, obj.min.y);
+  float minz = std::min(obj.max.z, obj.min.z);
+
+  obj = {glm::vec4(minx, miny, minz, 1), glm::vec4(maxx, maxy, maxz, 1)};
+
+  return obj;
 
 }
 
 int CheckCollisionAABBtoAABB(BoundingBox obj1b, BoundingBox obj2b){
+
+  obj1b = RecalculatePoints(obj1b);
+  obj2b = RecalculatePoints(obj2b);
 
   int collisionX = obj1b.max.x >= obj2b.min.x && obj2b.max.x >= obj1b.min.x;
 
@@ -253,15 +272,12 @@ glm::vec4 GetNormal(BoundingBox wall){
 
 int CheckCollisionPlayerFloor(BoundingBox player){
 
-
   glm::vec4 point = glm::vec4((player.max.x + player.min.x)/2, player.min.y, (player.max.z + player.min.z)/2, 1);
   int res = 0;
 
   for(int i= 0; i < N_FLOORS; i++){
 
     res = 0;
-
-    glm::vec4 floor_normal = GetNormal(floors[i]);
 
     float maxx = std::max(floors[i].max.x, floors[i].min.x);
     float minx = std::min(floors[i].max.x, floors[i].min.x);
@@ -273,30 +289,9 @@ int CheckCollisionPlayerFloor(BoundingBox player){
       res = point.y - 0.1 <= floors[i].max.y;  /* point.y > floors[i].max.y && */
     }
 
-    /* if(){ */
-    /*   res = 1; */
-    /* } */
-
     if(res == 1){
       return 1;
     }
-  }
-
-  player.min.y = player.min.y - 0.1;
-  res = CheckCollisionAABBtoAABB(player, g_MovingPlatform);
-
-  if(res == 1){
-    return 1;
-  }
-
-  BoundingBox fix_platform = GetBoundingBoxObject("platform");
-  glm::mat4 platform_trasform = Matrix_Translate(0.0f, 13.0f, 0.0f) * Matrix_Scale(0.025f, 0.025f, 0.025f);
-  fix_platform = {platform_trasform * fix_platform.min, platform_trasform * fix_platform.max};
-
-  res = CheckCollisionAABBtoAABB(player, fix_platform) && (point.y + 0.1 > fix_platform.max.y);
-
-  if(res == 1){
-    return 1;
   }
 
   return 0;
