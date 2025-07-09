@@ -188,10 +188,11 @@ void main()
         q = 128.0;
     }
     else if(object_id == PLATFORM){
+        // A refletância especular é 0, logo a plataforma possui somente iluminação difusa
         Kd = KdPlatform;
-        Ks = vec3(0.2, 0.2, 0.2);
+        Ks = vec3(0.0, 0.0, 0.0);
         Ka =  Kd/2;
-        q = 128.0;
+        q = 1.0;
     }
     else if(object_id == BOX){
         Kd = KdBox * vec3(0.64, 0.64, 0.64);
