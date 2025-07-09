@@ -282,7 +282,8 @@ int CheckCollisionPlayerFloor(BoundingBox player){
     }
   }
 
-  res = CheckCollisionAABBtoAABB(player, g_MovingPlatform) && (point.y + 0.1 > g_MovingPlatform.max.y);
+  player.min.y = player.min.y - 0.1;
+  res = CheckCollisionAABBtoAABB(player, g_MovingPlatform);
 
   if(res == 1){
     return 1;
