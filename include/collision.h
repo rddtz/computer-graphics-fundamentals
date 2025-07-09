@@ -269,9 +269,13 @@ int CheckCollisionPlayerFloor(BoundingBox player){
     float minz = std::min(floors[i].max.z, floors[i].min.z);
 
 
-    if(point.y >= floors[i].max.y && point.x >= minx && point.x <= maxx && point.z >= minz && point.z <= maxz){
-      res = CheckCollisionPointToPlane(point, floor_normal, floors[i].min, 0.2);
+    if(point.x >= minx && point.x <= maxx && point.z >= minz && point.z <= maxz){
+      res = point.y - 0.1 <= floors[i].max.y;  /* point.y > floors[i].max.y && */
     }
+
+    /* if(){ */
+    /*   res = 1; */
+    /* } */
 
     if(res == 1){
       return 1;
@@ -315,11 +319,11 @@ int CheckCollisionPointWalls(glm::vec4 point){
 
       if(abs(wall_normal.z) >= 0.001f){
 	if(point.x >= minx && point.y <= maxx){
-	  res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 1.1);
+	  res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 1.0);
 	}
       } else {
 	if(point.z >= minz && point.z <= maxz){
-	  res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 1.1);
+	  res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 1.0);
 	}
       }
 

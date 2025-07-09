@@ -477,7 +477,7 @@ int main(int argc, char* argv[]) {
       if(g_Jump_Time > 0.0){
 	g_Jump_Time = g_Jump_Time - delta_t;
       } else {
-      g_Jumping = false;
+	g_Jumping = false;
       }
     }
 
