@@ -52,8 +52,7 @@ glm::vec4 orangePortalLooksAt = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
 int orangePortalSeesDirection = WEST;
 bool isOrangePortalActive = false;
 
-//glm::vec4 boxPosition = glm::vec4(0.0f, 14.1f, 0.75f, 1.0f);
-glm::vec4 boxPosition = glm::vec4(0.0f, 2.5f, 25.0f, 1.0f);
+glm::vec4 boxPosition = glm::vec4(0.0f, 14.1f, 0.75f, 1.0f);
 bool isFloorButtonPressed = false;
 
 int main(int argc, char* argv[]) {
@@ -668,7 +667,9 @@ int main(int argc, char* argv[]) {
   }
 
   if(g_EndGame){
-    // fim de jogo
+    glClear(GL_DEPTH_BUFFER_BIT);
+    model = T_view * Matrix_Translate(-5.0, -5.0, -5.5) * Matrix_Scale(10.0, 10.0, 1.0);
+    DrawObject(model, "cube", FLOOR);
   }
 
   TextRendering_ShowFramesPerSecond(window);
