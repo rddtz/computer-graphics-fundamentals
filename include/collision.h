@@ -270,7 +270,7 @@ int CheckCollisionPlayerFloor(BoundingBox player){
 
 
     if(point.y >= floors[i].max.y && point.x >= minx && point.x <= maxx && point.z >= minz && point.z <= maxz){
-      res = CheckCollisionPointToPlane(point, floor_normal, floors[i].min, 0.3);
+      res = CheckCollisionPointToPlane(point, floor_normal, floors[i].min, 0.2);
     }
 
     if(res == 1){

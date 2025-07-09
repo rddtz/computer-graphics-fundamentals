@@ -239,11 +239,13 @@ int main(int argc, char* argv[]) {
     prev_time = current_time;
 
     BoundingBox player = GetBoundingBoxObject("the_bunny");
-    glm::vec4 cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
+    glm::vec4 cam_temp = camera_position_c;
     glm::mat4 modelPlayer = Matrix_Translate(cam_temp.x,
 					     cam_temp.y,
 					     cam_temp.z)
       * Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+
+    player = {modelPlayer * player.min, modelPlayer * player.max};
 
     if (isBluePortalActive && isOrangePortalActive) {
       // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
@@ -282,14 +284,6 @@ int main(int argc, char* argv[]) {
 
       sceneObjects(view, projection, T_view);
 
-      player = GetBoundingBoxObject("the_bunny");
-      cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
-      modelPlayer = Matrix_Translate(cam_temp.x,
-				     cam_temp.y,
-				     cam_temp.z)
-	* Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
-
-      player = {modelPlayer * player.min, modelPlayer * player.max};
       if(CheckCollisionAABBtoAABB(player, g_MovingPlatform)){
 	camera_position_c = camera_position_c + g_MovingPlatformDelta;
 	printf("CAMERA = (%f,%f,%f)\n", camera_position_c.x, camera_position_c.y, camera_position_c.z);
@@ -344,14 +338,6 @@ int main(int argc, char* argv[]) {
 
       sceneObjects(view, projection, T_view);
 
-      player = GetBoundingBoxObject("the_bunny");
-      cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
-      modelPlayer = Matrix_Translate(cam_temp.x,
-				     cam_temp.y,
-				     cam_temp.z)
-	* Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
-
-      player = {modelPlayer * player.min, modelPlayer * player.max};
       if(CheckCollisionAABBtoAABB(player, g_MovingPlatform)){
 	camera_position_c = camera_position_c + g_MovingPlatformDelta;
 	printf("CAMERA = (%f,%f,%f)\n", camera_position_c.x, camera_position_c.y, camera_position_c.z);
