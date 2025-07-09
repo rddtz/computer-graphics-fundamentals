@@ -234,6 +234,17 @@ int main(int argc, char* argv[]) {
     float nearplane = -0.5f;
     float farplane = -85.0f;
 
+    float current_time = (float)glfwGetTime();
+    float delta_t = current_time - prev_time;
+    prev_time = current_time;
+
+    BoundingBox player = GetBoundingBoxObject("the_bunny");
+    glm::vec4 cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
+    glm::mat4 modelPlayer = Matrix_Translate(cam_temp.x,
+					     cam_temp.y,
+					     cam_temp.z)
+      * Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+
     if (isBluePortalActive && isOrangePortalActive) {
       // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
       glBindFramebuffer(GL_FRAMEBUFFER, bluePortalViewFramebuffer);
@@ -270,6 +281,19 @@ int main(int argc, char* argv[]) {
                          glm::value_ptr(projection));
 
       sceneObjects(view, projection, T_view);
+
+      player = GetBoundingBoxObject("the_bunny");
+      cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
+      modelPlayer = Matrix_Translate(cam_temp.x,
+				     cam_temp.y,
+				     cam_temp.z)
+	* Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+
+      player = {modelPlayer * player.min, modelPlayer * player.max};
+      if(CheckCollisionAABBtoAABB(player, g_MovingPlatform)){
+	camera_position_c = camera_position_c + g_MovingPlatformDelta;
+	printf("CAMERA = (%f,%f,%f)\n", camera_position_c.x, camera_position_c.y, camera_position_c.z);
+      }
 
       glActiveTexture(GL_TEXTURE10);
       glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
@@ -320,6 +344,19 @@ int main(int argc, char* argv[]) {
 
       sceneObjects(view, projection, T_view);
 
+      player = GetBoundingBoxObject("the_bunny");
+      cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
+      modelPlayer = Matrix_Translate(cam_temp.x,
+				     cam_temp.y,
+				     cam_temp.z)
+	* Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+
+      player = {modelPlayer * player.min, modelPlayer * player.max};
+      if(CheckCollisionAABBtoAABB(player, g_MovingPlatform)){
+	camera_position_c = camera_position_c + g_MovingPlatformDelta;
+	printf("CAMERA = (%f,%f,%f)\n", camera_position_c.x, camera_position_c.y, camera_position_c.z);
+      }
+
       glActiveTexture(GL_TEXTURE10);
       glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
       glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"),
@@ -358,17 +395,13 @@ int main(int argc, char* argv[]) {
     //    glm::vec4
     camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
 
-    float current_time = (float)glfwGetTime();
-    float delta_t = current_time - prev_time;
-    prev_time = current_time;
-
     glm::vec4 camera_w_vector =
         -(camera_view_vector / norm(camera_view_vector));
     camera_w_vector.y = 0;
 
     //  -=-=-=-=-=-=-=-=-=-=-=-=-=- USER INPUT HANDLING
     //  -=-=-=-=-=-=-=-=-=-=-=-=-=-
-    glm::vec4 cam_temp = camera_position_c;
+    cam_temp = camera_position_c;
 
     if (g_KeyW_Pressed) {
       cam_temp = camera_position_c;
@@ -433,23 +466,20 @@ int main(int argc, char* argv[]) {
     }
 
 
-    BoundingBox player = {glm::vec4(g_VirtualScene["the_bunny"].bbox_min.x, g_VirtualScene["the_bunny"].bbox_min.y, g_VirtualScene["the_bunny"].bbox_min.z, 1),
-		glm::vec4(g_VirtualScene["the_bunny"].bbox_max.x, g_VirtualScene["the_bunny"].bbox_max.y, g_VirtualScene["the_bunny"].bbox_max.z, 1)};
-
+    player = GetBoundingBoxObject("the_bunny");
     cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
-
-    glm::mat4 modelPlayer = Matrix_Translate(cam_temp.x,
+    modelPlayer = Matrix_Translate(cam_temp.x,
 					     cam_temp.y,
 					     cam_temp.z)
       * Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
 
     player = {modelPlayer * player.min, modelPlayer * player.max};
 
-    if (!CheckCollisionPointFloor(player) && !g_Jumping) {
+    if (!CheckCollisionPlayerFloor(player) && !g_Jumping) {
       camera_position_c = cam_temp;
     }
 
-    if (g_Space_Pressed && !g_Jumping && CheckCollisionPointFloor(player)) {
+    if (g_Space_Pressed && !g_Jumping && CheckCollisionPlayerFloor(player)) {
       g_Jumping = true;
       g_Jump_Time = 0.6;
     }
@@ -486,13 +516,20 @@ int main(int argc, char* argv[]) {
       projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
     }
 
-    if (CheckCollisionPointToAABB(g_VirtualScene["the_sphere"],
-                                  Matrix_Translate(-1.0f, 2.0f, 20.0f),
-                                  camera_position_c)) {
-      printf("Esta colidindo com a esfera\n");
-    }
-
     sceneObjects(view, projection, T_view);
+
+    player = GetBoundingBoxObject("the_bunny");
+    cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
+    modelPlayer = Matrix_Translate(cam_temp.x,
+					     cam_temp.y,
+					     cam_temp.z)
+      * Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+
+    player = {modelPlayer * player.min, modelPlayer * player.max};
+    if(CheckCollisionAABBtoAABB(player, g_MovingPlatform)){
+      camera_position_c = camera_position_c + g_MovingPlatformDelta;
+      printf("CAMERA = (%f,%f,%f)\n", camera_position_c.x, camera_position_c.y, camera_position_c.z);
+    }
 
     glActiveTexture(GL_TEXTURE10);
     glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
@@ -559,13 +596,7 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
     return;
   }
 
-  BoundingBox portalPoints = {
-      glm::vec4(g_VirtualScene["the_portal"].bbox_min.x,
-                g_VirtualScene["the_portal"].bbox_min.y,
-                g_VirtualScene["the_portal"].bbox_min.z, 1),
-      glm::vec4(g_VirtualScene["the_portal"].bbox_max.x,
-                g_VirtualScene["the_portal"].bbox_max.y,
-                g_VirtualScene["the_portal"].bbox_max.z, 1)};
+  BoundingBox portalPoints = GetBoundingBoxObject("the_portal");
 
   BoundingBox portal = {portal_transform * portalPoints.min,
                         portal_transform * portalPoints.max};
@@ -646,7 +677,20 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   // Moving platform
   model = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) *
           Matrix_Scale(0.025f, 0.025f, 0.025f);
-  g_MovingPlatformModel = model;
+
+  BoundingBox platform = GetBoundingBoxObject("platform");
+
+  g_MovingPlatformDelta = glm::vec4((g_MovingPlatform.max.x + g_MovingPlatform.min.x)/2.0f,
+				    (g_MovingPlatform.max.y + g_MovingPlatform.min.y)/2.0f,
+				    (g_MovingPlatform.max.z + g_MovingPlatform.min.z)/2.0f,
+				    0);
+  g_MovingPlatform = {model * platform.min, model * platform.max};
+  g_MovingPlatformDelta = glm::vec4((g_MovingPlatform.max.x + g_MovingPlatform.min.x)/2.0f - g_MovingPlatformDelta.x,
+				    (g_MovingPlatform.max.y + g_MovingPlatform.min.y)/2.0f - g_MovingPlatformDelta.y,
+				    (g_MovingPlatform.max.z + g_MovingPlatform.min.z)/2.0f - g_MovingPlatformDelta.z,
+				    0);
+  printf("PD = (%f,%f,%f)\n", g_MovingPlatformDelta.x, g_MovingPlatformDelta.y, g_MovingPlatformDelta.z);
+
   DrawObject(model, "platform", PLATFORM);
 
   // Fixed platform

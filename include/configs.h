@@ -114,7 +114,9 @@ struct ObjModel
 // estes são acessados.
 std::map<std::string, SceneObject> g_VirtualScene;
 
-glm::mat4 g_MovingPlatformModel;
+BoundingBox g_MovingPlatform;
+glm::vec4 g_MovingPlatformDelta;
+
 
 // Pilha que guardará as matrizes de modelagem.
 std::stack<glm::mat4>  g_MatrixStack;

@@ -5,14 +5,14 @@
 
 glm::vec4 GetNormal(BoundingBox wall);
 
-// AABB point
-int CheckCollisionAABBtoAABB(SceneObject obj1, glm::mat4 transf1, SceneObject obj2, glm::mat4 transf2);
+// AABB related collision
+int CheckCollisionAABBtoAABB(BoundingBox obj1b, BoundingBox obj2b);
 int CheckCollisionAABBtoPlane(BoundingBox box, glm::vec4 pn, float pd);
 int CheckCollisionPointToAABB(SceneObject obj1, glm::mat4 transf1, glm::vec4 point);
 
 // Points Collision
 int CheckCollisionPointWalls(glm::vec4 point);
-int CheckCollisionPointFloor(glm::vec4 point);
+int CheckCollisionPlayerFloor(BoundingBox player);
 int CheckCollisionPointToPlane(glm::vec4 point, glm::vec4 pn, glm::vec4 point_in_plane, float offset);
 
 
@@ -20,6 +20,7 @@ int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transfor
 
 std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_position, glm::vec4 view_vector);
 
+BoundingBox GetBoundingBoxObject(const char* name);
 BoundingBox GetBboxModel(ObjModel* model, glm::mat4 transformation);
 void SetWallsInfo();
 
@@ -33,10 +34,26 @@ BoundingBox higher_walls[N_WALLS];
 BoundingBox floors[N_FLOORS];
 
 
-int CheckCollisionAABBtoAABB(SceneObject obj1, glm::mat4 transf1, SceneObject obj2, glm::mat4 transf2){
+BoundingBox GetBoundingBoxObject(const char* name){
 
-  BoundingBox obj1b = {transf1 * glm::vec4(obj1.bbox_min.x, obj1.bbox_min.y, obj1.bbox_min.z, 1), transf1 * glm::vec4(obj1.bbox_max.x, obj1.bbox_max.y, obj1.bbox_max.z, 1)};
-  BoundingBox obj2b = {transf2 * glm::vec4(obj2.bbox_min.x, obj2.bbox_min.y, obj2.bbox_min.z, 2), transf2 * glm::vec4(obj2.bbox_max.x, obj2.bbox_max.y, obj2.bbox_max.z, 2)};
+  BoundingBox obj = {glm::vec4(g_VirtualScene[name].bbox_min.x, g_VirtualScene[name].bbox_min.y, g_VirtualScene[name].bbox_min.z, 1),
+		     glm::vec4(g_VirtualScene[name].bbox_max.x, g_VirtualScene[name].bbox_max.y, g_VirtualScene[name].bbox_max.z, 1)};
+
+  float maxx = std::max(obj.max.x, obj.min.x);
+  float maxy = std::max(obj.max.y, obj.min.y);
+  float maxz = std::max(obj.max.z, obj.min.z);
+
+  float minx = std::min(obj.max.x, obj.min.x);
+  float miny = std::min(obj.max.y, obj.min.y);
+  float minz = std::min(obj.max.z, obj.min.z);
+
+  obj = {glm::vec4(minx, miny, minz, 1), glm::vec4(maxx, maxy, maxz, 1)};
+
+  return obj;
+
+}
+
+int CheckCollisionAABBtoAABB(BoundingBox obj1b, BoundingBox obj2b){
 
   int collisionX = obj1b.max.x >= obj2b.min.x && obj2b.max.x >= obj1b.min.x;
 
@@ -64,8 +81,9 @@ int CheckCollisionAABBtoPlane(BoundingBox box, glm::vec4 pn, float pd){
 
 int CheckCollisionPlayerPortal(glm::vec4 player_point, glm::mat4 portal_transform){
 
-  BoundingBox portalPoints = {glm::vec4(g_VirtualScene["the_portal"].bbox_min.x, g_VirtualScene["the_portal"].bbox_min.y, g_VirtualScene["the_portal"].bbox_min.z, 1),
-			    glm::vec4(g_VirtualScene["the_portal"].bbox_max.x, g_VirtualScene["the_portal"].bbox_max.y, g_VirtualScene["the_portal"].bbox_max.z, 1)};
+  BoundingBox portalPoints = GetBoundingBoxObject("the_portal");
+  /* {glm::vec4(g_VirtualScene["the_portal"].bbox_min.x, g_VirtualScene["the_portal"].bbox_min.y, g_VirtualScene["the_portal"].bbox_min.z, 1), */
+  /* 			    glm::vec4(g_VirtualScene["the_portal"].bbox_max.x, g_VirtualScene["the_portal"].bbox_max.y, g_VirtualScene["the_portal"].bbox_max.z, 1)}; */
 
   BoundingBox portal = {portal_transform * portalPoints.min, portal_transform * portalPoints.max};
 
@@ -233,14 +251,15 @@ glm::vec4 GetNormal(BoundingBox wall){
 
 }
 
-int CheckCollisionPointFloor(BoundingBox player){
+int CheckCollisionPlayerFloor(BoundingBox player){
 
 
   glm::vec4 point = glm::vec4((player.max.x + player.min.x)/2, player.min.y, (player.max.z + player.min.z)/2, 1);
+  int res = 0;
 
   for(int i= 0; i < N_FLOORS; i++){
 
-    int res = 0;
+    res = 0;
 
     glm::vec4 floor_normal = GetNormal(floors[i]);
 
@@ -251,7 +270,7 @@ int CheckCollisionPointFloor(BoundingBox player){
 
 
     if(point.y >= floors[i].max.y && point.x >= minx && point.x <= maxx && point.z >= minz && point.z <= maxz){
-      res = CheckCollisionPointToPlane(point, floor_normal, floors[i].min, 0.1);
+      res = CheckCollisionPointToPlane(point, floor_normal, floors[i].min, 0.3);
     }
 
     if(res == 1){
@@ -259,7 +278,21 @@ int CheckCollisionPointFloor(BoundingBox player){
     }
   }
 
+  res = CheckCollisionAABBtoAABB(player, g_MovingPlatform) && (point.y + 0.1 > g_MovingPlatform.max.y);
 
+  if(res == 1){
+    return 1;
+  }
+
+  BoundingBox fix_platform = GetBoundingBoxObject("platform");
+  glm::mat4 platform_trasform = Matrix_Translate(0.0f, 13.0f, 0.0f) * Matrix_Scale(0.025f, 0.025f, 0.025f);
+  fix_platform = {platform_trasform * fix_platform.min, platform_trasform * fix_platform.max};
+
+  res = CheckCollisionAABBtoAABB(player, fix_platform) && (point.y + 0.1 > fix_platform.max.y);
+
+  if(res == 1){
+    return 1;
+  }
 
   return 0;
 
@@ -420,6 +453,7 @@ void SetWallsInfo(){
   floors[2] = {Matrix_Translate(-30.0, 0.0f, 30.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
 	       Matrix_Translate(-30.0, 0.0f, 30.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
 }
+
 
 
 #endif
