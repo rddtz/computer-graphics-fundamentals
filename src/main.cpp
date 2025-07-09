@@ -22,9 +22,11 @@ glm::vec4 calculateBezierCurve(float t, glm::vec4 point_a, glm::vec4 point_b,
 #define FLOOR 4
 #define PLAYER 5
 #define CUBE 6
+#define CROSSHAIR 7
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
-#define GOURAUD_SHADING 20
+#define GOURAUD_SHADING_RED 20
+#define GOURAUD_SHADING_GREEN 21
 #define DOOR 30
 #define BUTTON 31
 #define PLATFORM 32
@@ -530,8 +532,8 @@ int main(int argc, char* argv[]) {
     DrawObject(model, "PortalGun", PORTALGUN);
 
     model = T_view * Matrix_Translate(0.0, 0.0, -2.5) *
-            Matrix_Scale(0.05, 0.05, 0.05);
-    DrawObject(model, "the_sphere", SPHERE);
+            Matrix_Scale(0.015, 0.015, 0.015);
+    DrawObject(model, "the_sphere", CROSSHAIR);
 
     if (g_KeyE_Toggled) {
       isFloorButtonPressed = true;
@@ -627,16 +629,11 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
                      glm::value_ptr(projection));
 
-  // Drawing the sphere
-  model = Matrix_Translate(-1.0f, 2.0f, 0.0f) * Matrix_Rotate_Z(0.6f) *
-          Matrix_Rotate_X(0.2f) *
-          Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-  DrawObject(model, "the_sphere", SPHERE);
-
-  // Drawing the bunny
-  model = Matrix_Translate(1.0f, 2.0f, 0.0f) *
-          Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
-  DrawObject(model, "the_bunny", BUNNY);
+  model = Matrix_Translate(0.0f, 8.0f, -30.0f);
+  if (isFloorButtonPressed)
+    DrawObject(model, "the_sphere", GOURAUD_SHADING_GREEN);
+  else
+    DrawObject(model, "the_sphere", GOURAUD_SHADING_RED);
 
   glm::vec4 pointA = glm::vec4(27.75f, -0.2f, -9.0f, 1.0f);
   glm::vec4 pointB = glm::vec4(5.91f, 5.79f, -8.95f, 1.0f);
@@ -735,7 +732,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
           Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
 
-  model = Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-M_PI) *
+  model = Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(M_PI) *
           Matrix_Scale(10.0f, 10.0f, 0.0f);
   DrawObject(model, "the_wall", WALL);
 }

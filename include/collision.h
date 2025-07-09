@@ -406,8 +406,8 @@ void SetWallsInfo(){
   lower_walls[2] = {Matrix_Translate(30.0f, -20.0f, -30.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
 		    Matrix_Translate(30.0f, -20.0f, -30.0f) * Matrix_Rotate_Y(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
 
-  lower_walls[3] = {Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
-		    Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(-3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
+  lower_walls[3] = {Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
+		    Matrix_Translate(30.0f, -20.0f, 10.0f) * Matrix_Rotate_Y(3.141592f) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.max};
 
 
   floors[0] = {Matrix_Translate(-30.0, 0.0f, -10.0f) * Matrix_Rotate_X(-3.141592f / 2) * Matrix_Scale(10.0f, 10.0f, 0.0f) * wallPoints.min,
