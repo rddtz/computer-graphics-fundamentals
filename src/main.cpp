@@ -430,22 +430,37 @@ int main(int argc, char* argv[]) {
       isOrangePortalActive = true;
     }
 
+
+    BoundingBox player = {glm::vec4(g_VirtualScene["the_bunny"].bbox_min.x, g_VirtualScene["the_bunny"].bbox_min.y, g_VirtualScene["the_bunny"].bbox_min.z, 1),
+		glm::vec4(g_VirtualScene["the_bunny"].bbox_max.x, g_VirtualScene["the_bunny"].bbox_max.y, g_VirtualScene["the_bunny"].bbox_max.z, 1)};
+
     cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
-    if (!CheckCollisionPointFloor(cam_temp) && !g_Jumping) {
+
+    glm::mat4 modelPlayer = Matrix_Translate(cam_temp.x,
+					     cam_temp.y,
+					     cam_temp.z)
+      * Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+
+    player = {modelPlayer * player.min, modelPlayer * player.max};
+
+    if (!CheckCollisionPointFloor(player) && !g_Jumping) {
       camera_position_c = cam_temp;
     }
 
-    if (g_Space_Pressed && !g_Jumping && CheckCollisionPointFloor(cam_temp)) {
+    if (g_Space_Pressed && !g_Jumping && CheckCollisionPointFloor(player)) {
       g_Jumping = true;
-      g_Jump_Time = 0.5;
+      g_Jump_Time = 0.6;
     }
 
-    if (g_Jump_Time > 0) {
-      camera_position_c =
-          camera_position_c + glm::vec4(0, speed * delta_t, 0, 0);
+    if (g_Jump_Time > 0.1) {
+      camera_position_c = camera_position_c + glm::vec4(0, speed * delta_t, 0, 0);
       g_Jump_Time = g_Jump_Time - delta_t;
     } else {
+      if(g_Jump_Time > 0.0){
+	g_Jump_Time = g_Jump_Time - delta_t;
+      } else {
       g_Jumping = false;
+      }
     }
 
     //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -560,6 +575,10 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
                 (portal.max.y + portal.min.y) / 2.0f,
                 (portal.max.z + portal.min.z) / 2.0f, 1.0f);
 
+  if(new_position.y < camera->y){
+    new_position.y = portal.max.y;
+  }
+
   *camera = new_position + 2.0f * (portal_normal / norm(portal_normal));
   // return new_position;
 
@@ -630,6 +649,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   // Moving platform
   model = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) *
           Matrix_Scale(0.025f, 0.025f, 0.025f);
+  g_MovingPlatformModel = model;
   DrawObject(model, "platform", PLATFORM);
 
   // Fixed platform

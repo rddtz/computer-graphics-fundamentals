@@ -233,7 +233,10 @@ glm::vec4 GetNormal(BoundingBox wall){
 
 }
 
-int CheckCollisionPointFloor(glm::vec4 point){
+int CheckCollisionPointFloor(BoundingBox player){
+
+
+  glm::vec4 point = glm::vec4((player.max.x + player.min.x)/2, player.min.y, (player.max.z + player.min.z)/2, 1);
 
   for(int i= 0; i < N_FLOORS; i++){
 
@@ -248,7 +251,7 @@ int CheckCollisionPointFloor(glm::vec4 point){
 
 
     if(point.y >= floors[i].max.y && point.x >= minx && point.x <= maxx && point.z >= minz && point.z <= maxz){
-      res = CheckCollisionPointToPlane(point, floor_normal, floors[i].min, 2.0);
+      res = CheckCollisionPointToPlane(point, floor_normal, floors[i].min, 0.1);
     }
 
     if(res == 1){
