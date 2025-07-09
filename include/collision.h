@@ -22,6 +22,7 @@ std::pair<glm::vec4, glm::vec4> CheckCollisionLineToWalls(glm::vec4 camera_posit
 
 BoundingBox GetBoundingBoxObject(const char* name);
 BoundingBox GetBboxModel(ObjModel* model, glm::mat4 transformation);
+float GetCurrentFloorY(glm::vec4 point);
 void SetWallsInfo();
 
 BoundingBox wallPoints;
@@ -33,6 +34,24 @@ BoundingBox lower_walls[N_WALLS];
 BoundingBox higher_walls[N_WALLS];
 BoundingBox floors[N_FLOORS];
 
+float GetCurrentFloorY(glm::vec4 point){
+
+
+  for(int i= 0; i < N_FLOORS; i++){
+
+    float maxx = std::max(floors[i].max.x, floors[i].min.x);
+    float minx = std::min(floors[i].max.x, floors[i].min.x);
+    float maxz = std::max(floors[i].max.z, floors[i].min.z);
+    float minz = std::min(floors[i].max.z, floors[i].min.z);
+
+    if(point.x >= minx && point.x <= maxx && point.z >= minz && point.z <= maxz){
+      return floors[i].max.y;
+    }
+  }
+
+  return -1.0f;
+
+}
 
 BoundingBox GetBoundingBoxObject(const char* name){
 
@@ -283,7 +302,6 @@ int CheckCollisionPlayerFloor(BoundingBox player){
     float minx = std::min(floors[i].max.x, floors[i].min.x);
     float maxz = std::max(floors[i].max.z, floors[i].min.z);
     float minz = std::min(floors[i].max.z, floors[i].min.z);
-
 
     if(point.x >= minx && point.x <= maxx && point.z >= minz && point.z <= maxz){
       res = point.y - 0.1 <= floors[i].max.y;  /* point.y > floors[i].max.y && */

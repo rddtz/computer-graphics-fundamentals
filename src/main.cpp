@@ -262,8 +262,6 @@ int main(int argc, char* argv[]) {
 				    (g_MovingPlatform.max.z + g_MovingPlatform.min.z)/2.0f - g_MovingPlatformDelta.z,
 				    0);
 
-  printf("PD = (%f,%f,%f)\n", g_MovingPlatformDelta.x, g_MovingPlatformDelta.y, g_MovingPlatformDelta.z);
-
   if (isBluePortalActive && isOrangePortalActive) {
     // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
     glBindFramebuffer(GL_FRAMEBUFFER, bluePortalViewFramebuffer);
@@ -473,20 +471,16 @@ int main(int argc, char* argv[]) {
     camera_position_c = camera_position_c + g_MovingPlatformDelta;
     g_OnMovingPlatform = true;
     g_PlayerOnGround = true;
-    printf("CAMERA = (%f,%f,%f)\n", camera_position_c.x, camera_position_c.y, camera_position_c.z);
   } else {
-    g_OnMovingPlatform = 0;
+    g_OnMovingPlatform = false;
     g_PlayerOnGround = false;
   }
-
 
   BoundingBox fixed_platform = GetBoundingBoxObject("platform");
   glm::mat4 platform_trasform = Matrix_Translate(0.0f, 13.0f, 0.0f) * Matrix_Scale(0.025f, 0.025f, 0.025f);
   fixed_platform = {platform_trasform * fixed_platform.min, platform_trasform * fixed_platform.max};
 
-  // cam_temp = camera_position_c - glm::vec4(0, speed * delta_t, 0, 0);
   player.min.y = player.min.y - speed * delta_t;
-
   g_PlayerOnGround = CheckCollisionPlayerFloor(player) || CheckCollisionAABBtoAABB(player, fixed_platform) || g_OnMovingPlatform;
   if (!g_PlayerOnGround && !g_Jumping && !g_OnMovingPlatform) {
     camera_position_c.y = camera_position_c.y - speed * delta_t;
@@ -573,10 +567,42 @@ int main(int argc, char* argv[]) {
     Matrix_Scale(0.015, 0.015, 0.015);
   DrawObject(model, "the_sphere", CROSSHAIR);
 
+  // Bounding Box for the box
   if (g_KeyE_Toggled) {
     isFloorButtonPressed = true;
 
     boxPosition = camera_position_c + camera_view_vector;
+
+    BoundingBox boxBB = GetBoundingBoxObject("wcube_rdmobj00");
+
+    boxPosition.y = std::max(boxPosition.y, GetCurrentFloorY(boxPosition) + 0.1f * boxBB.max.y/2.0f);
+  } else {
+
+    BoundingBox boxBB = GetBoundingBoxObject("wcube_rdmobj00");
+    glm::mat4 cubeModel = Matrix_Translate(boxPosition.x, boxPosition.y, boxPosition.z) *
+      Matrix_Scale(0.05f, 0.05f, 0.05f);
+    boxBB = {cubeModel * boxBB.min, cubeModel * boxBB.max};
+
+    if(CheckCollisionAABBtoAABB(boxBB, g_MovingPlatform)){
+      boxPosition = boxPosition + g_MovingPlatformDelta;
+      g_BoxOnMovingPlatform = true;
+      g_BoxOnGround = true;
+    } else {
+      g_BoxOnMovingPlatform = false;
+      g_BoxOnGround = false;
+    }
+
+    BoundingBox fixed_platform = GetBoundingBoxObject("platform");
+    glm::mat4 platform_trasform = Matrix_Translate(0.0f, 13.0f, 0.0f) * Matrix_Scale(0.025f, 0.025f, 0.025f);
+    fixed_platform = {platform_trasform * fixed_platform.min, platform_trasform * fixed_platform.max};
+
+    boxBB.min.y = boxBB.min.y - 2.0f * delta_t;
+    g_BoxOnGround = CheckCollisionPlayerFloor(boxBB) || CheckCollisionAABBtoAABB(boxBB, fixed_platform) || g_BoxOnMovingPlatform;
+    if (!g_BoxOnGround && !g_BoxOnMovingPlatform) {
+      boxPosition.y = boxPosition.y - speed * delta_t;
+      g_BoxOnGround = false;
+    }
+
   }
 
   TextRendering_ShowFramesPerSecond(window);

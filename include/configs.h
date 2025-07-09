@@ -120,6 +120,9 @@ glm::mat4 g_bezierModel;
 bool g_OnMovingPlatform = false;
 bool g_PlayerOnGround = false;
 
+bool g_BoxOnMovingPlatform = false;
+bool g_BoxOnGround = false;
+
 // Pilha que guardará as matrizes de modelagem.
 std::stack<glm::mat4>  g_MatrixStack;
 
