@@ -52,7 +52,8 @@ glm::vec4 orangePortalLooksAt = glm::vec4(0.0f, 2.0f, 0.0f, 1.0f);
 int orangePortalSeesDirection = WEST;
 bool isOrangePortalActive = false;
 
-glm::vec4 boxPosition = glm::vec4(0.0f, 14.1f, 0.75f, 1.0f);
+//glm::vec4 boxPosition = glm::vec4(0.0f, 14.1f, 0.75f, 1.0f);
+glm::vec4 boxPosition = glm::vec4(0.0f, 2.5f, 25.0f, 1.0f);
 bool isFloorButtonPressed = false;
 
 int main(int argc, char* argv[]) {
@@ -429,7 +430,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  if (g_LeftMouseButtonPressed) {
+  if (g_LeftMouseButtonPressed && !g_HoldingBox) {
     std::pair<glm::vec4, glm::vec4> collisionResult =
       CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
     // printf("POINT x: %f y: %f z: %f \n", collisionResult.first.x,
@@ -442,7 +443,7 @@ int main(int argc, char* argv[]) {
     isBluePortalActive = true;
   }
 
-  if (g_RightMouseButtonPressed) {
+  if (g_RightMouseButtonPressed && !g_HoldingBox) {
     std::pair<glm::vec4, glm::vec4> collisionResult =
       CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
 
@@ -567,19 +568,80 @@ int main(int argc, char* argv[]) {
     Matrix_Scale(0.015, 0.015, 0.015);
   DrawObject(model, "the_sphere", CROSSHAIR);
 
+
+
+  // Checking Collision with the button
+
+  player = GetBoundingBoxObject("the_bunny");
+  modelPlayer = Matrix_Translate(camera_position_c.x,
+					   camera_position_c.y,
+					   camera_position_c.z)
+    * Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+  player = {modelPlayer * player.min, modelPlayer * player.max};
+
+  glm::mat4 buttonModel = Matrix_Translate(-20.0f, 0.1f, 25.0f) * Matrix_Scale(0.03f, 0.005f, 0.005f);
+  BoundingBox buttonBB = GetBoundingBoxObject("button");
+  buttonBB = {buttonModel * buttonBB.min, buttonModel * buttonBB.max};
+
+  BoundingBox boxBB = GetBoundingBoxObject("wcube_rdmobj00");
+  glm::mat4 cubeModel = Matrix_Translate(boxPosition.x, boxPosition.y, boxPosition.z) *
+    Matrix_Scale(0.05f, 0.05f, 0.05f);
+  boxBB = {cubeModel * boxBB.min, cubeModel * boxBB.max};
+
+  isFloorButtonPressed = CheckCollisionAABBtoAABB(player, buttonBB) || CheckCollisionAABBtoAABB(boxBB, buttonBB);
+
+  // Checking if player has ended the level
+  glm::mat4 modelDoor = Matrix_Translate(0.0f, 3.0f, -26.5f) * Matrix_Rotate_Z(M_PI_2) *
+          Matrix_Scale(0.05f, 0.05f, 0.05f);
+
+  BoundingBox doorBB = GetBoundingBoxObject("body.dmx/door.dmx.mesh_0");
+  doorBB = {modelDoor * doorBB.min, modelDoor * doorBB.max};
+
+  g_EndGame = CheckCollisionAABBtoAABB(player, doorBB) && isFloorButtonPressed;
+
   // Bounding Box for the box
-  if (g_KeyE_Toggled) {
-    isFloorButtonPressed = true;
+
+
+  // if(g_HoldingBox && !g_KeyE_Toggled){
+  //   g_HoldingBox = false;
+  // }
+
+  // bool validDistance = norm(boxPosition - camera_position_c) <= 0.5f * norm(camera_view_vector);
+  // if (!g_HoldingBox && g_KeyE_Toggled && validDistance) {
+  //   g_HoldingBox = true;
+  // } else {
+  //   g_KeyE_Toggled = false;
+  // }
+
+  if(g_KeyE_Toggled){
+      bool validDistance = norm(boxPosition - camera_position_c) <= 1.0f * norm(camera_view_vector);
+      if(validDistance){
+	g_HoldingBox = true;
+      }
+      if(!validDistance && !g_HoldingBox){
+	g_KeyE_Toggled = false;
+      }
+  } else {
+    g_HoldingBox = false;
+  }
+
+  if(!g_HoldingBox){
+    if(boxPosition.y < GetCurrentFloorY(boxPosition)){
+      boxPosition.y = GetCurrentFloorY(boxPosition) + 0.1f * boxBB.max.y/2.0f;
+    }
+  }
+  if(g_HoldingBox){
 
     boxPosition = camera_position_c + camera_view_vector;
+    boxBB = GetBoundingBoxObject("wcube_rdmobj00");
+    if(boxPosition.y < GetCurrentFloorY(camera_position_c)){
+      boxPosition.y = GetCurrentFloorY(camera_position_c) + 0.1f * boxBB.max.y/2.0f;
+    }
 
-    BoundingBox boxBB = GetBoundingBoxObject("wcube_rdmobj00");
-
-    boxPosition.y = std::max(boxPosition.y, GetCurrentFloorY(boxPosition) + 0.1f * boxBB.max.y/2.0f);
   } else {
 
-    BoundingBox boxBB = GetBoundingBoxObject("wcube_rdmobj00");
-    glm::mat4 cubeModel = Matrix_Translate(boxPosition.x, boxPosition.y, boxPosition.z) *
+    boxBB = GetBoundingBoxObject("wcube_rdmobj00");
+    cubeModel = Matrix_Translate(boxPosition.x, boxPosition.y, boxPosition.z) *
       Matrix_Scale(0.05f, 0.05f, 0.05f);
     boxBB = {cubeModel * boxBB.min, cubeModel * boxBB.max};
 
@@ -603,6 +665,10 @@ int main(int argc, char* argv[]) {
       g_BoxOnGround = false;
     }
 
+  }
+
+  if(g_EndGame){
+    // fim de jogo
   }
 
   TextRendering_ShowFramesPerSecond(window);
@@ -703,7 +769,7 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
 
   // Button
   model =
-      Matrix_Translate(-20.0f, 0.5f, 25.0f) * Matrix_Scale(0.05f, 0.05f, 0.05f);
+      Matrix_Translate(-20.0f, 0.35f, 25.0f) * Matrix_Scale(0.035f, 0.035f, 0.035f);
 
   DrawObject(model, "button", BUTTON);
 

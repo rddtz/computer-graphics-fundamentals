@@ -333,11 +333,11 @@ int CheckCollisionPointWalls(glm::vec4 point){
 
       if(abs(wall_normal.z) >= 0.001f){
 	if(point.x >= minx && point.y <= maxx){
-	  res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 1.0);
+	  res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 0.8);
 	}
       } else {
 	if(point.z >= minz && point.z <= maxz){
-	  res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 1.0);
+	  res = CheckCollisionPointToPlane(point, wall_normal, higher_walls[i].min, 0.8);
 	}
       }
 

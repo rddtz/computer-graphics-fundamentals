@@ -122,6 +122,9 @@ bool g_PlayerOnGround = false;
 
 bool g_BoxOnMovingPlatform = false;
 bool g_BoxOnGround = false;
+bool g_HoldingBox = false;
+
+bool g_EndGame = false;
 
 // Pilha que guardará as matrizes de modelagem.
 std::stack<glm::mat4>  g_MatrixStack;
