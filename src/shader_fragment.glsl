@@ -28,13 +28,16 @@ uniform mat4 projection;
 #define FLOOR 4
 #define PLAYER 5
 #define CUBE 6
+#define CROSSHAIR 7
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
-#define GOURAUD_SHADING 20
+#define GOURAUD_SHADING_RED 20
+#define GOURAUD_SHADING_GREEN 21
 #define DOOR 30
 #define BUTTON 31
 #define PLATFORM 32
 #define BOX 33
+
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -59,6 +62,8 @@ out vec4 color;
 #define M_PI   3.14159265358979323846
 #define M_PI_2 1.57079632679489661923
 
+bool calcIllumination = true;
+
 void main()
 {
     // Obtemos a posição da câmera utilizando a inversa da matriz que define o
@@ -78,7 +83,7 @@ void main()
     vec4 n = normalize(normal);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(1.0,1.0,0.5,0.0));
+    vec4 l = normalize(vec4(0.0,1.0,0.0,0.0));
 
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
@@ -165,62 +170,102 @@ void main()
 
     float lambert = max(0,dot(n,l));
 
-    vec3 Ia = vec3(0.2, 0.2, 0.2);
+    vec3 Kd;
+    vec3 Ks;
+    vec3 Ka;
+    float q;
+
     if(object_id == DOOR){
-        color.rgb = KdDoor;
+        Kd = KdDoor;
+        Ks = vec3(0.2, 0.2, 0.2);
+        Ka =  Kd/2;
+        q = 128.0;
     }
     else if(object_id == BUTTON){
-        color.rgb = KdButton;
+        Kd = KdButton;
+        Ks = vec3(0.2, 0.2, 0.2);
+        Ka =  Kd/2;
+        q = 128.0;
     }
     else if(object_id == PLATFORM){
-        color.rgb = KdPlatform;
+        Kd = KdPlatform;
+        Ks = vec3(0.2, 0.2, 0.2);
+        Ka =  Kd/2;
+        q = 128.0;
     }
     else if(object_id == BOX){
-        color.rgb = KdBox;
+        Kd = KdBox * vec3(0.64, 0.64, 0.64);
+        Ks = vec3(0.5, 0.5, 0.5);
+        Ka = KdBox;
+        q = 96.078431;
     }
     else if ((object_id == SPHERE)){
-        vec3 Kd = vec3(0.678, 0.678, 0.059);
-        vec3 Ks = vec3(0.8, 0.8, 0.8);
-        vec3 Ka = Kd / 2;
-        float q = 80.0;
+        Kd = vec3(0.678, 0.678, 0.059);
+        Ks = vec3(0.8, 0.8, 0.8);
+        Ka = Kd / 2;
+        q = 80.0;
 
-        vec4 h = normalize(v + l);
-
-        color.rgb = lambert * Kd + Ka * Ia + Ks * max(0, pow(dot(n,h),q));
     } else if (object_id == BUNNY){
-        vec3 Kd = vec3(0.678, 0.678, 0.059);
-        vec3 Ks = vec3(0.8, 0.8, 0.8);
-        vec3 Ka = Kd / 2;
-        float q = 80.0;
+        Kd = vec3(0.678, 0.678, 0.059);
+        Ks = vec3(0.8, 0.8, 0.8);
+        Ka = Kd / 2;
+        q = 80.0;
 
-        vec4 h = normalize(v + l);
-
-        color.rgb = lambert * Kd + Ka * Ia + Ks * max(0, pow(dot(n,h),q));
     } else if (object_id == PORTALGUN){
-        vec3 Kd = vec3(0.678, 0.678, 0.059);
-        vec3 Ks = vec3(0.8, 0.8, 0.8);
-        vec3 Ka = Kd / 2;
-        float q = 80.0;
+        Kd = KdPortalGun;
+        Ks = vec3(0.8, 0.8, 0.8);
+        Ka = Kd / 2;
+        q = 80.0;
 
-        vec4 h = normalize(v + l);
-        color.rgb = KdPortalGun + Ks * max(0, pow(dot(n,h),q));
     } else if(object_id == ORANGE_PORTAL){
-        color.rgb = KdOP * 0.5 + vec3(0.996, 0.318, 0.027) * 0.5;  
+        color.rgb = KdOP * 0.5 + vec3(0.996, 0.318, 0.027) * 0.5; 
+        calcIllumination = false; 
     } else if(object_id == BLUE_PORTAL){
         color.rgb = KdBP * 0.5 + vec3(0.325, 0.745, 0.937) * 0.5; 
+        calcIllumination = false;
     } else if (object_id == WALL){
-        color.rgb = KdLabWall;
+        Kd = KdLabWall;
+        Ka = Kd;
     } else if (object_id == FLOOR){
         color.rgb = KdLabWall;
-    } else if(object_id == GOURAUD_SHADING){
+        calcIllumination = false;
+
+    } else if(object_id == GOURAUD_SHADING_RED || object_id == GOURAUD_SHADING_GREEN){
         color = cor_v;
+        calcIllumination = false;
     } 
+    else if(object_id == CROSSHAIR){
+        color.rgb = vec3(0.0, 0.0, 0.0);
+        calcIllumination = false;
+    }
     else if(object_id == CUBE){
-        color.rgb = KdButton;
+        Kd = KdButton;
     }
     else{
-        color.rgb = vec3(0.0,0.0,0.0);
+        Kd = vec3(0.0,0.0,0.0);
     }
+
+    vec4 h = normalize(v + l);
+    
+    // Espectro da luz ambiente
+    vec3 Ia = vec3(0.75, 0.75, 0.75);
+
+    // Espectro da fonte de iluminação
+    vec3 I = vec3(1.0, 1.0, 1.0);
+
+    // Termo difuso utilizando a lei dos cossenos de Lambert
+    vec3 lambert_diffuse_term = Kd*I*max(0, dot(n,l));
+
+    // Termo ambiente
+    vec3 ambient_term = Ka * Ia; 
+
+    // Termo especular utilizando o modelo de iluminação de Blinn-Phong
+    vec3 phong_specular_term  = Ks*I*max(0, pow(dot(n,h),q));
+
+    if(calcIllumination){
+        color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;      
+    }
+
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:
     // 1) Habilitar a operação de "blending" de OpenGL logo antes de realizar o

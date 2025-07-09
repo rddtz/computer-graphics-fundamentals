@@ -6,7 +6,8 @@ layout (location = 0) in vec4 model_coefficients;
 layout (location = 1) in vec4 normal_coefficients;
 layout (location = 2) in vec2 texture_coefficients;
 
-#define GOURAUD_SHADING 20
+#define GOURAUD_SHADING_RED 20
+#define GOURAUD_SHADING_GREEN 21
 uniform int object_id;
 
 
@@ -27,7 +28,7 @@ out vec4 cor_v;
 
 void main()
 {
-    if(object_id == GOURAUD_SHADING){
+    if((object_id == GOURAUD_SHADING_RED) || (object_id == GOURAUD_SHADING_GREEN)){
         gl_Position = projection * view * model * model_coefficients;
         position_world = model * model_coefficients;
         position_model = model_coefficients;
@@ -37,7 +38,11 @@ void main()
 
         texcoords = texture_coefficients;
 
-        vec3 Kd = vec3(0.678, 0.678, 0.059);
+        vec3 Kd;
+        if(object_id == GOURAUD_SHADING_RED)
+            Kd = vec3(0.5, 0.0, 0.0);
+        else if(object_id == GOURAUD_SHADING_GREEN)
+            Kd = vec3(0.0, 0.5, 0.0);
         vec3 Ks = vec3(0.8, 0.8, 0.8);
         vec3 Ka = Kd / 2;
         float q = 80.0;
@@ -47,7 +52,7 @@ void main()
 
         vec4 p = position_world;
 
-        vec4 l = normalize(vec4(1.0,1.0,0.5,0.0));
+        vec4 l = normalize(vec4(0.0,0.5,0.5,0.0));
 
         vec4 v = normalize(camera_position - p);
 
@@ -55,7 +60,7 @@ void main()
 
         float lambert = max(0,dot(normal,l));
 
-        vec3 Ia = vec3(0.2, 0.2, 0.2);
+        vec3 Ia = vec3(0.75, 0.75, 0.75);
 
         vec3 cor_vertice = lambert * Kd + Ka * Ia + Ks * max(0, pow(dot(normal,h),q));
         cor_v.r = cor_vertice.r;
