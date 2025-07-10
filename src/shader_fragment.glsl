@@ -29,6 +29,7 @@ uniform mat4 projection;
 #define PLAYER 5
 #define CUBE 6
 #define CROSSHAIR 7
+#define LEVEL_COMPLETE 8
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
 #define GOURAUD_SHADING_RED 20
@@ -50,10 +51,13 @@ uniform sampler2D ButtonTexture;
 uniform sampler2D LabWallTexture;
 uniform sampler2D PortalGunTexture;
 uniform sampler2D PlatformTexture;
-uniform sampler2D BoxTexture;
+uniform sampler2D LevelCompleteTexture;
 
 uniform sampler2D BluePortalTexture;
 uniform sampler2D OrangePortalTexture;
+
+uniform sampler2D BoxTexture;
+
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -164,6 +168,8 @@ void main()
 
     vec3 KdBox = texture(BoxTexture, vec2(U,V)).rgb;
 
+    vec3 KdLevelComplete = texture(LevelCompleteTexture, vec2(U,V)).rgb;
+
     vec3 KdBP = texture(BluePortalTexture, vec2(U,V)).rgb;
 
     vec3 KdOP = texture(OrangePortalTexture, vec2(U,V)).rgb;
@@ -239,8 +245,9 @@ void main()
         color.rgb = vec3(0.0, 0.0, 0.0);
         calcIllumination = false;
     }
-    else if(object_id == CUBE){
-        Kd = KdButton;
+    else if(object_id == LEVEL_COMPLETE){
+        color.rgb = KdLevelComplete;
+        calcIllumination = false;
     }
     else{
         Kd = vec3(0.0,0.0,0.0);

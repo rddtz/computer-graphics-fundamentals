@@ -187,8 +187,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "PortalGunTexture"), 3);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "PlatformTexture"), 4);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "BoxTexture"), 5);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage7"), 7);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "LevelCompleteTexture"),6);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"), 10);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"),11);
     glUseProgram(0);

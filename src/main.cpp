@@ -23,6 +23,7 @@ glm::vec4 calculateBezierCurve(float t, glm::vec4 point_a, glm::vec4 point_b,
 #define PLAYER 5
 #define CUBE 6
 #define CROSSHAIR 7
+#define LEVEL_COMPLETE 8
 #define BLUE_PORTAL 10
 #define ORANGE_PORTAL 11
 #define GOURAUD_SHADING_RED 20
@@ -669,7 +670,7 @@ int main(int argc, char* argv[]) {
   if(g_EndGame){
     glClear(GL_DEPTH_BUFFER_BIT);
     model = T_view * Matrix_Translate(-5.0, -5.0, -5.5) * Matrix_Scale(10.0, 10.0, 1.0);
-    DrawObject(model, "cube", FLOOR);
+    DrawObject(model, "cube", LEVEL_COMPLETE);
   }
 
   TextRendering_ShowFramesPerSecond(window);
@@ -858,6 +859,7 @@ void LoadTextures() {
   LoadTextureImage("../../textures/portalgun/textures/portalgun_col.jpg");
   LoadTextureImage("../../data/Platform/light_rail_platform.png");
   LoadTextureImage("../../data/Weighted Cube/metal_box.png");
+  LoadTextureImage("../../data/level_complete.png");
 }
 
 void DrawObject(glm::mat4 model, const char* name, int id) {
