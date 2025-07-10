@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
   const GLubyte* glslversion = glGetString(GL_SHADING_LANGUAGE_VERSION);
 
   // Framebuffer for the view from blue portal / orange portal texture
-  // Tutorial from LearnOpenGL
+  // Based on a tutorial from LearnOpenGL (https://learnopengl.com/Advanced-OpenGL/Framebuffers)
   GLuint bluePortalViewFramebuffer;
   glGenFramebuffers(1, &bluePortalViewFramebuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, bluePortalViewFramebuffer);
@@ -239,51 +239,289 @@ int main(int argc, char* argv[]) {
     float delta_t = current_time - prev_time;
     prev_time = current_time;
 
-  glm::vec4 pointA = glm::vec4(27.75f, -0.2f, -9.0f, 1.0f);
-  glm::vec4 pointB = glm::vec4(5.91f, 5.79f, -8.95f, 1.0f);
-  glm::vec4 pointC = glm::vec4(21.79f, 10.36f, -4.79f, 1.0f);
-  glm::vec4 pointD = glm::vec4(0.0f, 13.0f, -3.5f, 1.0f);
+    // Defining the points for the moving platform's Bézier curve
+    glm::vec4 pointA = glm::vec4(27.75f, -0.2f, -9.0f, 1.0f);
+    glm::vec4 pointB = glm::vec4(5.91f, 5.79f, -8.95f, 1.0f);
+    glm::vec4 pointC = glm::vec4(21.79f, 10.36f, -4.79f, 1.0f);
+    glm::vec4 pointD = glm::vec4(0.0f, 13.0f, -3.5f, 1.0f);
 
-  glm::vec4 bezierPoint = calculateBezierCurve(
-      (sin(0.2 * glfwGetTime()) + 1) / 2, pointA, pointB, pointC, pointD);
+    glm::vec4 bezierPoint = calculateBezierCurve(
+        (sin(0.2 * glfwGetTime()) + 1) / 2, pointA, pointB, pointC, pointD);
 
-  // Moving platform
-  g_bezierModel = Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) *
-          Matrix_Scale(0.025f, 0.025f, 0.025f);
+    // Moving platform model
+    g_bezierModel =
+        Matrix_Translate(bezierPoint.x, bezierPoint.y, bezierPoint.z) *
+        Matrix_Scale(0.025f, 0.025f, 0.025f);
 
-  BoundingBox platform = GetBoundingBoxObject("platform");
+    BoundingBox platform = GetBoundingBoxObject("platform");
+    
+    // Platform position change since last frame
+    g_MovingPlatformDelta =
+        glm::vec4((g_MovingPlatform.max.x + g_MovingPlatform.min.x) / 2.0f,
+                  (g_MovingPlatform.max.y + g_MovingPlatform.min.y) / 2.0f,
+                  (g_MovingPlatform.max.z + g_MovingPlatform.min.z) / 2.0f, 0);
+    g_MovingPlatform = {g_bezierModel * platform.min,
+                        g_bezierModel * platform.max};
+    g_MovingPlatformDelta =
+        glm::vec4((g_MovingPlatform.max.x + g_MovingPlatform.min.x) / 2.0f -
+                      g_MovingPlatformDelta.x,
+                  (g_MovingPlatform.max.y + g_MovingPlatform.min.y) / 2.0f -
+                      g_MovingPlatformDelta.y,
+                  (g_MovingPlatform.max.z + g_MovingPlatform.min.z) / 2.0f -
+                      g_MovingPlatformDelta.z,
+                  0);
 
-  g_MovingPlatformDelta = glm::vec4((g_MovingPlatform.max.x + g_MovingPlatform.min.x)/2.0f,
-				    (g_MovingPlatform.max.y + g_MovingPlatform.min.y)/2.0f,
-				    (g_MovingPlatform.max.z + g_MovingPlatform.min.z)/2.0f,
-				    0);
-  g_MovingPlatform = {g_bezierModel * platform.min, g_bezierModel * platform.max};
-  g_MovingPlatformDelta = glm::vec4((g_MovingPlatform.max.x + g_MovingPlatform.min.x)/2.0f - g_MovingPlatformDelta.x,
-				    (g_MovingPlatform.max.y + g_MovingPlatform.min.y)/2.0f - g_MovingPlatformDelta.y,
-				    (g_MovingPlatform.max.z + g_MovingPlatform.min.z)/2.0f - g_MovingPlatformDelta.z,
-				    0);
+    if (isBluePortalActive && isOrangePortalActive) {
+      // DRAWING THE BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
+      glBindFramebuffer(GL_FRAMEBUFFER, bluePortalViewFramebuffer);
+      glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glUseProgram(g_GpuProgramID);
 
-  if (isBluePortalActive && isOrangePortalActive) {
-    // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
-    glBindFramebuffer(GL_FRAMEBUFFER, bluePortalViewFramebuffer);
+      // Portal's look-at camera
+      glm::vec4 camera_view_vector = bluePortalLooksAt - bluePortalPosition;
+      glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+
+      glm::mat4 view = Matrix_Camera_View(bluePortalPosition,
+                                          camera_view_vector, camera_up_vector);
+      glm::mat4 T_view = T_Matrix_Camera_View(
+          bluePortalPosition, camera_view_vector, camera_up_vector);
+
+      glm::mat4 projection;
+
+      if (g_UsePerspectiveProjection) {
+        float field_of_view = M_PI / 3.0f;
+        projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane,
+                                        farplane);
+      } else {
+        float t = 1.5f * g_CameraDistance / 2.5f;
+        float b = -t;
+        float r = t * g_ScreenRatio;
+        float l = -r;
+        projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
+      }
+
+      glm::mat4 model = Matrix_Identity();
+
+      glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
+      glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
+                         glm::value_ptr(projection));
+
+      sceneObjects(view, projection, T_view);
+
+      glActiveTexture(GL_TEXTURE10);
+      glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
+      glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"),
+                  10);
+
+      glm::mat4 modelOrangePortal =
+          Matrix_Translate(orangePortalPosition.x, orangePortalPosition.y,
+                           orangePortalPosition.z) *
+          orangePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
+      DrawObject(modelOrangePortal, "the_portal", ORANGE_PORTAL);
+
+      model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
+                               camera_position_c.z) *
+              Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+      DrawObject(model, "the_bunny", BUNNY);
+
+      // DRAWING THE BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
+      glBindFramebuffer(GL_FRAMEBUFFER, orangePortalViewFramebuffer);
+      glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glUseProgram(g_GpuProgramID);
+
+      // Portal's look-at camera
+      camera_view_vector = orangePortalLooksAt - orangePortalPosition;
+
+      view = Matrix_Camera_View(orangePortalPosition, camera_view_vector,
+                                camera_up_vector);
+      T_view = T_Matrix_Camera_View(orangePortalPosition, camera_view_vector,
+                                    camera_up_vector);
+
+      if (g_UsePerspectiveProjection) {
+        float field_of_view = M_PI / 3.0f;
+        projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane,
+                                        farplane);
+      } else {
+        float t = 1.5f * g_CameraDistance / 2.5f;
+        float b = -t;
+        float r = t * g_ScreenRatio;
+        float l = -r;
+        projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
+      }
+
+      model = Matrix_Identity();
+
+      glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
+      glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
+                         glm::value_ptr(projection));
+
+      sceneObjects(view, projection, T_view);
+
+      glActiveTexture(GL_TEXTURE10);
+      glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
+      glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"),
+                  10);
+
+      glm::mat4 modelBluePortal =
+          Matrix_Translate(bluePortalPosition.x, bluePortalPosition.y,
+                           bluePortalPosition.z) *
+          bluePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
+      DrawObject(modelBluePortal, "the_portal", BLUE_PORTAL);
+
+      glActiveTexture(GL_TEXTURE11);
+      glBindTexture(GL_TEXTURE_2D, orangePortalTexture);
+      glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"),
+                  11);
+
+      model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
+                               camera_position_c.z) *
+              Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+      DrawObject(model, "the_bunny", BUNNY);
+    }
+
+    // DRAWING THE PLAYER'S VIEW
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     glUseProgram(g_GpuProgramID);
 
-    glm::vec4 camera_view_vector = bluePortalLooksAt - bluePortalPosition;
-    glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    // Player free camera definition
+    float r = g_CameraDistance;
+    float y = r * sin(g_CameraPhi);
+    float z = r * cos(g_CameraPhi) * cos(g_CameraTheta);
+    float x = r * cos(g_CameraPhi) * sin(g_CameraTheta);
 
-    glm::mat4 view = Matrix_Camera_View(bluePortalPosition,
-					camera_view_vector, camera_up_vector);
+    glm::vec4 camera_view_vector = glm::vec4(x, y, z, 0.0f);
+    //    glm::vec4
+    camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+
+    glm::vec4 camera_w_vector =
+        -(camera_view_vector / norm(camera_view_vector));
+    camera_w_vector.y = 0;
+
+    //  -=-=-=-=-=-=-=-=-=-=-=-=-=- USER INPUT HANDLING
+    //  -=-=-=-=-=-=-=-=-=-=-=-=-=-
+    glm::vec4 cam_temp = camera_position_c;
+
+    if (g_KeyW_Pressed) {
+      cam_temp = camera_position_c;
+      cam_temp += -camera_w_vector * speed * delta_t;
+      if (!CheckCollisionPointWalls(cam_temp)) {
+        camera_position_c = cam_temp;
+      }
+    }
+    if (g_KeyS_Pressed) {
+      cam_temp = camera_position_c;
+      cam_temp += camera_w_vector * speed * delta_t;
+      CheckCollisionPointWalls(cam_temp);
+      if (!CheckCollisionPointWalls(cam_temp)) {
+        camera_position_c = cam_temp;
+      }
+    }
+    if (g_KeyD_Pressed) {
+      cam_temp = camera_position_c;
+      glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
+      cam_temp += (upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+      CheckCollisionPointWalls(cam_temp);
+      if (!CheckCollisionPointWalls(cam_temp)) {
+        camera_position_c = cam_temp;
+      }
+    }
+    if (g_KeyA_Pressed) {
+      cam_temp = camera_position_c;
+      glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
+      cam_temp += -(upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
+      CheckCollisionPointWalls(cam_temp);
+      if (!CheckCollisionPointWalls(cam_temp)) {
+        camera_position_c = cam_temp;
+      }
+    }
+
+    if (g_LeftMouseButtonPressed && !g_HoldingBox) {
+      std::pair<glm::vec4, glm::vec4> collisionResult =
+          CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
+
+      UpdatePortalPosition(collisionResult.first, collisionResult.second,
+                           BLUE_PORTAL);
+      isBluePortalActive = true;
+    }
+
+    if (g_RightMouseButtonPressed && !g_HoldingBox) {
+      std::pair<glm::vec4, glm::vec4> collisionResult =
+          CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
+
+      UpdatePortalPosition(collisionResult.first, collisionResult.second,
+                           ORANGE_PORTAL);
+
+      isOrangePortalActive = true;
+    }
+
+    BoundingBox player = GetBoundingBoxObject("the_bunny");
+    glm::mat4 modelPlayer =
+        Matrix_Translate(camera_position_c.x, camera_position_c.y,
+                         camera_position_c.z) *
+        Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+
+    player = {modelPlayer * player.min, modelPlayer * player.max};
+
+    if (CheckCollisionAABBtoAABB(player, g_MovingPlatform)) {
+      camera_position_c = camera_position_c + g_MovingPlatformDelta;
+      g_OnMovingPlatform = true;
+      g_PlayerOnGround = true;
+    } else {
+      g_OnMovingPlatform = false;
+      g_PlayerOnGround = false;
+    }
+
+    BoundingBox fixed_platform = GetBoundingBoxObject("platform");
+    glm::mat4 platform_trasform = Matrix_Translate(0.0f, 13.0f, 0.0f) *
+                                  Matrix_Scale(0.025f, 0.025f, 0.025f);
+    fixed_platform = {platform_trasform * fixed_platform.min,
+                      platform_trasform * fixed_platform.max};
+
+    player.min.y = player.min.y - speed * delta_t;
+    g_PlayerOnGround = CheckCollisionPlayerFloor(player) ||
+                       CheckCollisionAABBtoAABB(player, fixed_platform) ||
+                       g_OnMovingPlatform;
+    if (!g_PlayerOnGround && !g_Jumping && !g_OnMovingPlatform) {
+      camera_position_c.y = camera_position_c.y - speed * delta_t;
+      g_PlayerOnGround = false;
+    }
+
+    if (g_Space_Pressed && !g_Jumping && g_PlayerOnGround) {
+      g_Jumping = true;
+      g_Jump_Time = 0.6;
+    }
+
+    if (g_Jump_Time > 0.1) {
+      camera_position_c =
+          camera_position_c + glm::vec4(0, speed * delta_t, 0, 0);
+      g_Jump_Time = g_Jump_Time - delta_t;
+    } else {
+      if (g_Jump_Time > 0.0) {
+        g_Jump_Time = g_Jump_Time - delta_t;
+      } else {
+        g_Jumping = false;
+      }
+    }
+
+    //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector,
+                                        camera_up_vector);
     glm::mat4 T_view = T_Matrix_Camera_View(
-					    bluePortalPosition, camera_view_vector, camera_up_vector);
+        camera_position_c, camera_view_vector, camera_up_vector);
 
     glm::mat4 projection;
 
     if (g_UsePerspectiveProjection) {
       float field_of_view = M_PI / 3.0f;
-      projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane,
-				      farplane);
+      projection =
+          Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
     } else {
       float t = 1.5f * g_CameraDistance / 2.5f;
       float b = -t;
@@ -292,392 +530,154 @@ int main(int argc, char* argv[]) {
       projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
     }
 
-    glm::mat4 model = Matrix_Identity();
-
-    glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
-		       glm::value_ptr(projection));
-
     sceneObjects(view, projection, T_view);
 
     glActiveTexture(GL_TEXTURE10);
     glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"),
-		10);
-
-    glm::mat4 modelOrangePortal =
-      Matrix_Translate(orangePortalPosition.x, orangePortalPosition.y,
-		       orangePortalPosition.z) *
-      orangePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
-    DrawObject(modelOrangePortal, "the_portal", ORANGE_PORTAL);
-
-    model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
-			     camera_position_c.z) *
-      Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
-    DrawObject(model, "the_bunny", BUNNY);
-
-    // BLUE PORTAL VIEW, APPEARS ON ORANGE PORTAL
-    glBindFramebuffer(GL_FRAMEBUFFER, orangePortalViewFramebuffer);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(g_GpuProgramID);
-
-    camera_view_vector = orangePortalLooksAt - orangePortalPosition;
-
-    view = Matrix_Camera_View(orangePortalPosition, camera_view_vector,
-			      camera_up_vector);
-    T_view = T_Matrix_Camera_View(orangePortalPosition, camera_view_vector,
-				  camera_up_vector);
-
-    if (g_UsePerspectiveProjection) {
-      float field_of_view = M_PI / 3.0f;
-      projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane,
-				      farplane);
-    } else {
-      float t = 1.5f * g_CameraDistance / 2.5f;
-      float b = -t;
-      float r = t * g_ScreenRatio;
-      float l = -r;
-      projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
-    }
-
-    model = Matrix_Identity();
-
-    glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE,
-		       glm::value_ptr(projection));
-
-    sceneObjects(view, projection, T_view);
-
-    glActiveTexture(GL_TEXTURE10);
-    glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"),
-		10);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"), 10);
 
     glm::mat4 modelBluePortal =
-      Matrix_Translate(bluePortalPosition.x, bluePortalPosition.y,
-		       bluePortalPosition.z) *
-      bluePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
+        Matrix_Translate(bluePortalPosition.x, bluePortalPosition.y,
+                         bluePortalPosition.z) *
+        bluePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
     DrawObject(modelBluePortal, "the_portal", BLUE_PORTAL);
 
     glActiveTexture(GL_TEXTURE11);
     glBindTexture(GL_TEXTURE_2D, orangePortalTexture);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"),
-		11);
+                11);
 
-    model = Matrix_Translate(camera_position_c.x, camera_position_c.y,
-			     camera_position_c.z) *
-      Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
-    DrawObject(model, "the_bunny", BUNNY);
-  }
+    glm::mat4 modelOrangePortal =
+        Matrix_Translate(orangePortalPosition.x, orangePortalPosition.y,
+                         orangePortalPosition.z) *
+        orangePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
+    DrawObject(modelOrangePortal, "the_portal", ORANGE_PORTAL);
 
-  //// ORIGINAL :
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glUseProgram(g_GpuProgramID);
-
-  float r = g_CameraDistance;
-  float y = r * sin(g_CameraPhi);
-  float z = r * cos(g_CameraPhi) * cos(g_CameraTheta);
-  float x = r * cos(g_CameraPhi) * sin(g_CameraTheta);
-
-  glm::vec4 camera_view_vector = glm::vec4(x, y, z, 0.0f);
-  //    glm::vec4
-  camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-
-  glm::vec4 camera_w_vector =
-    -(camera_view_vector / norm(camera_view_vector));
-  camera_w_vector.y = 0;
-
-  //  -=-=-=-=-=-=-=-=-=-=-=-=-=- USER INPUT HANDLING
-  //  -=-=-=-=-=-=-=-=-=-=-=-=-=-
-  glm::vec4 cam_temp = camera_position_c;
-
-  if (g_KeyW_Pressed) {
-    cam_temp = camera_position_c;
-    cam_temp += -camera_w_vector * speed * delta_t;
-    if (!CheckCollisionPointWalls(cam_temp)) {
-      camera_position_c = cam_temp;
-    }
-  }
-  if (g_KeyS_Pressed) {
-    cam_temp = camera_position_c;
-    cam_temp += camera_w_vector * speed * delta_t;
-    CheckCollisionPointWalls(cam_temp);
-    if (!CheckCollisionPointWalls(cam_temp)) {
-      camera_position_c = cam_temp;
-    }
-  }
-  if (g_KeyD_Pressed) {
-    cam_temp = camera_position_c;
-    glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
-    cam_temp += (upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
-    CheckCollisionPointWalls(cam_temp);
-    if (!CheckCollisionPointWalls(cam_temp)) {
-      camera_position_c = cam_temp;
-    }
-  }
-  if (g_KeyA_Pressed) {
-    cam_temp = camera_position_c;
-    glm::vec4 upw_crossprod = crossproduct(camera_up_vector, camera_w_vector);
-    cam_temp += -(upw_crossprod / norm(upw_crossprod)) * speed * delta_t;
-    CheckCollisionPointWalls(cam_temp);
-    if (!CheckCollisionPointWalls(cam_temp)) {
-      camera_position_c = cam_temp;
-    }
-  }
-
-  if (g_LeftMouseButtonPressed && !g_HoldingBox) {
-    std::pair<glm::vec4, glm::vec4> collisionResult =
-      CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
-    // printf("POINT x: %f y: %f z: %f \n", collisionResult.first.x,
-    //        collisionResult.first.y, collisionResult.first.z);
-    // printf("NORMAL x: %f y: %f z: %f \n", collisionResult.second.x,
-    //        collisionResult.second.y, collisionResult.second.z);
-
-    UpdatePortalPosition(collisionResult.first, collisionResult.second,
-			 BLUE_PORTAL);
-    isBluePortalActive = true;
-  }
-
-  if (g_RightMouseButtonPressed && !g_HoldingBox) {
-    std::pair<glm::vec4, glm::vec4> collisionResult =
-      CheckCollisionLineToWalls(camera_position_c, camera_view_vector);
-
-    // printf("POINT x: %f y: %f z: %f \n", collisionResult.first.x,
-    //        collisionResult.first.y, collisionResult.first.z);
-    // printf("NORMAL x: %f y: %f z: %f \n", collisionResult.second.x,
-    //        collisionResult.second.y, collisionResult.second.z);
-
-    UpdatePortalPosition(collisionResult.first, collisionResult.second,
-			 ORANGE_PORTAL);
-
-    isOrangePortalActive = true;
-  }
-
-
-
-  BoundingBox player = GetBoundingBoxObject("the_bunny");
-  glm::mat4 modelPlayer = Matrix_Translate(camera_position_c.x,
-					   camera_position_c.y,
-					   camera_position_c.z)
-    * Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
-
-  player = {modelPlayer * player.min, modelPlayer * player.max};
-
-  if(CheckCollisionAABBtoAABB(player, g_MovingPlatform)){
-    camera_position_c = camera_position_c + g_MovingPlatformDelta;
-    g_OnMovingPlatform = true;
-    g_PlayerOnGround = true;
-  } else {
-    g_OnMovingPlatform = false;
-    g_PlayerOnGround = false;
-  }
-
-  BoundingBox fixed_platform = GetBoundingBoxObject("platform");
-  glm::mat4 platform_trasform = Matrix_Translate(0.0f, 13.0f, 0.0f) * Matrix_Scale(0.025f, 0.025f, 0.025f);
-  fixed_platform = {platform_trasform * fixed_platform.min, platform_trasform * fixed_platform.max};
-
-  player.min.y = player.min.y - speed * delta_t;
-  g_PlayerOnGround = CheckCollisionPlayerFloor(player) || CheckCollisionAABBtoAABB(player, fixed_platform) || g_OnMovingPlatform;
-  if (!g_PlayerOnGround && !g_Jumping && !g_OnMovingPlatform) {
-    camera_position_c.y = camera_position_c.y - speed * delta_t;
-    g_PlayerOnGround = false;
-  }
-
-  if (g_Space_Pressed && !g_Jumping && g_PlayerOnGround) {
-    g_Jumping = true;
-    g_Jump_Time = 0.6;
-  }
-
-  if (g_Jump_Time > 0.1) {
-    camera_position_c = camera_position_c + glm::vec4(0, speed * delta_t, 0, 0);
-    g_Jump_Time = g_Jump_Time - delta_t;
-  } else {
-    if(g_Jump_Time > 0.0){
-      g_Jump_Time = g_Jump_Time - delta_t;
-    } else {
-      g_Jumping = false;
-    }
-  }
-
-  //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-  glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector,
-				      camera_up_vector);
-  glm::mat4 T_view = T_Matrix_Camera_View(
-					  camera_position_c, camera_view_vector, camera_up_vector);
-
-  glm::mat4 projection;
-
-  if (g_UsePerspectiveProjection) {
-    float field_of_view = M_PI / 3.0f;
-    projection =
-      Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
-  } else {
-    float t = 1.5f * g_CameraDistance / 2.5f;
-    float b = -t;
-    float r = t * g_ScreenRatio;
-    float l = -r;
-    projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
-  }
-
-  sceneObjects(view, projection, T_view);
-
-  glActiveTexture(GL_TEXTURE10);
-  glBindTexture(GL_TEXTURE_2D, bluePortalTexture);
-  glUniform1i(glGetUniformLocation(g_GpuProgramID, "BluePortalTexture"), 10);
-
-  glm::mat4 modelBluePortal =
-    Matrix_Translate(bluePortalPosition.x, bluePortalPosition.y,
-		     bluePortalPosition.z) *
-    bluePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
-  DrawObject(modelBluePortal, "the_portal", BLUE_PORTAL);
-
-  glActiveTexture(GL_TEXTURE11);
-  glBindTexture(GL_TEXTURE_2D, orangePortalTexture);
-  glUniform1i(glGetUniformLocation(g_GpuProgramID, "OrangePortalTexture"),
-	      11);
-
-  glm::mat4 modelOrangePortal =
-    Matrix_Translate(orangePortalPosition.x, orangePortalPosition.y,
-		     orangePortalPosition.z) *
-    orangePortalRotation * Matrix_Scale(2.5f, 2.5f, 1.0f);
-  DrawObject(modelOrangePortal, "the_portal", ORANGE_PORTAL);
-
-  if (CheckCollisionPlayerPortal(camera_position_c, modelBluePortal)) {
-    // printf("Colidiu com o portal azul\n");
-    MovePlayerToPortal(&camera_position_c, modelOrangePortal, ORANGE_PORTAL);
-  }
-
-  if (CheckCollisionPlayerPortal(camera_position_c, modelOrangePortal)) {
-    // printf("Colidiu com o portal laranja\n");
-    MovePlayerToPortal(&camera_position_c, modelBluePortal, BLUE_PORTAL);
-  }
-
-  // Drawing the portal gun
-  glClear(GL_DEPTH_BUFFER_BIT);
-  glm::mat4 model = T_view * Matrix_Translate(0.4, -0.3, -0.8) *
-    Matrix_Scale(0.3, 0.3, 0.3);
-  DrawObject(model, "PortalGun", PORTALGUN);
-
-  model = T_view * Matrix_Translate(0.0, 0.0, -2.5) *
-    Matrix_Scale(0.015, 0.015, 0.015);
-  DrawObject(model, "the_sphere", CROSSHAIR);
-
-
-
-  // Checking Collision with the button
-
-  player = GetBoundingBoxObject("the_bunny");
-  modelPlayer = Matrix_Translate(camera_position_c.x,
-					   camera_position_c.y,
-					   camera_position_c.z)
-    * Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
-  player = {modelPlayer * player.min, modelPlayer * player.max};
-
-  glm::mat4 buttonModel = Matrix_Translate(-20.0f, 0.1f, 25.0f) * Matrix_Scale(0.03f, 0.005f, 0.005f);
-  BoundingBox buttonBB = GetBoundingBoxObject("button");
-  buttonBB = {buttonModel * buttonBB.min, buttonModel * buttonBB.max};
-
-  BoundingBox boxBB = GetBoundingBoxObject("wcube_rdmobj00");
-  glm::mat4 cubeModel = Matrix_Translate(boxPosition.x, boxPosition.y, boxPosition.z) *
-    Matrix_Scale(0.05f, 0.05f, 0.05f);
-  boxBB = {cubeModel * boxBB.min, cubeModel * boxBB.max};
-
-  isFloorButtonPressed = CheckCollisionAABBtoAABB(player, buttonBB) || CheckCollisionAABBtoAABB(boxBB, buttonBB);
-
-  // Checking if player has ended the level
-  glm::mat4 modelDoor = Matrix_Translate(0.0f, 3.0f, -26.5f) * Matrix_Rotate_Z(M_PI_2) *
-          Matrix_Scale(0.05f, 0.05f, 0.05f);
-
-  BoundingBox doorBB = GetBoundingBoxObject("body.dmx/door.dmx.mesh_0");
-  doorBB = {modelDoor * doorBB.min, modelDoor * doorBB.max};
-
-  g_EndGame = CheckCollisionAABBtoAABB(player, doorBB) && isFloorButtonPressed;
-
-  // Bounding Box for the box
-
-
-  // if(g_HoldingBox && !g_KeyE_Toggled){
-  //   g_HoldingBox = false;
-  // }
-
-  // bool validDistance = norm(boxPosition - camera_position_c) <= 0.5f * norm(camera_view_vector);
-  // if (!g_HoldingBox && g_KeyE_Toggled && validDistance) {
-  //   g_HoldingBox = true;
-  // } else {
-  //   g_KeyE_Toggled = false;
-  // }
-
-  if(g_KeyE_Toggled){
-      bool validDistance = norm(boxPosition - camera_position_c) <= 1.0f * norm(camera_view_vector);
-      if(validDistance){
-	g_HoldingBox = true;
-      }
-      if(!validDistance && !g_HoldingBox){
-	g_KeyE_Toggled = false;
-      }
-  } else {
-    g_HoldingBox = false;
-  }
-
-  if(!g_HoldingBox){
-    if(boxPosition.y < GetCurrentFloorY(boxPosition)){
-      boxPosition.y = GetCurrentFloorY(boxPosition) + 0.1f * boxBB.max.y/2.0f;
-    }
-  }
-  if(g_HoldingBox){
-
-    boxPosition = camera_position_c + camera_view_vector;
-    boxBB = GetBoundingBoxObject("wcube_rdmobj00");
-    if(boxPosition.y < GetCurrentFloorY(camera_position_c)){
-      boxPosition.y = GetCurrentFloorY(camera_position_c) + 0.1f * boxBB.max.y/2.0f;
+    if (CheckCollisionPlayerPortal(camera_position_c, modelBluePortal)) {
+      MovePlayerToPortal(&camera_position_c, modelOrangePortal, ORANGE_PORTAL);
     }
 
-  } else {
+    if (CheckCollisionPlayerPortal(camera_position_c, modelOrangePortal)) {
+      MovePlayerToPortal(&camera_position_c, modelBluePortal, BLUE_PORTAL);
+    }
 
-    boxBB = GetBoundingBoxObject("wcube_rdmobj00");
-    cubeModel = Matrix_Translate(boxPosition.x, boxPosition.y, boxPosition.z) *
-      Matrix_Scale(0.05f, 0.05f, 0.05f);
+    // Drawing the portal gun
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glm::mat4 model = T_view * Matrix_Translate(0.4, -0.3, -0.8) *
+                      Matrix_Scale(0.3, 0.3, 0.3);
+    DrawObject(model, "PortalGun", PORTALGUN);
+
+    // Drawing the crosshair
+    model = T_view * Matrix_Translate(0.0, 0.0, -2.5) *
+            Matrix_Scale(0.015, 0.015, 0.015);
+    DrawObject(model, "the_sphere", CROSSHAIR);
+
+    // Checking Collision with the button
+
+    player = GetBoundingBoxObject("the_bunny");
+    modelPlayer = Matrix_Translate(camera_position_c.x, camera_position_c.y,
+                                   camera_position_c.z) *
+                  Matrix_Rotate_Y(g_CameraTheta + M_PI_2);
+    player = {modelPlayer * player.min, modelPlayer * player.max};
+
+    glm::mat4 buttonModel = Matrix_Translate(-20.0f, 0.1f, 25.0f) *
+                            Matrix_Scale(0.03f, 0.005f, 0.005f);
+    BoundingBox buttonBB = GetBoundingBoxObject("button");
+    buttonBB = {buttonModel * buttonBB.min, buttonModel * buttonBB.max};
+
+    BoundingBox boxBB = GetBoundingBoxObject("wcube_rdmobj00");
+    glm::mat4 cubeModel =
+        Matrix_Translate(boxPosition.x, boxPosition.y, boxPosition.z) *
+        Matrix_Scale(0.05f, 0.05f, 0.05f);
     boxBB = {cubeModel * boxBB.min, cubeModel * boxBB.max};
 
-    if(CheckCollisionAABBtoAABB(boxBB, g_MovingPlatform)){
-      boxPosition = boxPosition + g_MovingPlatformDelta;
-      g_BoxOnMovingPlatform = true;
-      g_BoxOnGround = true;
+    isFloorButtonPressed = CheckCollisionAABBtoAABB(player, buttonBB) ||
+                           CheckCollisionAABBtoAABB(boxBB, buttonBB);
+
+    // Checking if player has ended the level
+    glm::mat4 modelDoor = Matrix_Translate(0.0f, 3.0f, -26.5f) *
+                          Matrix_Rotate_Z(M_PI_2) *
+                          Matrix_Scale(0.05f, 0.05f, 0.05f);
+
+    BoundingBox doorBB = GetBoundingBoxObject("body.dmx/door.dmx.mesh_0");
+    doorBB = {modelDoor * doorBB.min, modelDoor * doorBB.max};
+
+    g_EndGame =
+        CheckCollisionAABBtoAABB(player, doorBB) && isFloorButtonPressed;
+
+    // Logic for grabbing the box
+    if (g_KeyE_Toggled) {
+      bool validDistance = norm(boxPosition - camera_position_c) <=
+                           1.0f * norm(camera_view_vector);
+      if (validDistance) {
+        g_HoldingBox = true;
+      }
+      if (!validDistance && !g_HoldingBox) {
+        g_KeyE_Toggled = false;
+      }
     } else {
-      g_BoxOnMovingPlatform = false;
-      g_BoxOnGround = false;
+      g_HoldingBox = false;
     }
 
-    BoundingBox fixed_platform = GetBoundingBoxObject("platform");
-    glm::mat4 platform_trasform = Matrix_Translate(0.0f, 13.0f, 0.0f) * Matrix_Scale(0.025f, 0.025f, 0.025f);
-    fixed_platform = {platform_trasform * fixed_platform.min, platform_trasform * fixed_platform.max};
+    if (!g_HoldingBox) {
+      if (boxPosition.y < GetCurrentFloorY(boxPosition)) {
+        boxPosition.y =
+            GetCurrentFloorY(boxPosition) + 0.1f * boxBB.max.y / 2.0f;
+      }
+    }
+    if (g_HoldingBox) {
+      boxPosition = camera_position_c + camera_view_vector;
+      boxBB = GetBoundingBoxObject("wcube_rdmobj00");
+      if (boxPosition.y < GetCurrentFloorY(camera_position_c)) {
+        boxPosition.y =
+            GetCurrentFloorY(camera_position_c) + 0.1f * boxBB.max.y / 2.0f;
+      }
 
-    boxBB.min.y = boxBB.min.y - 2.0f * delta_t;
-    g_BoxOnGround = CheckCollisionPlayerFloor(boxBB) || CheckCollisionAABBtoAABB(boxBB, fixed_platform) || g_BoxOnMovingPlatform;
-    if (!g_BoxOnGround && !g_BoxOnMovingPlatform) {
-      boxPosition.y = boxPosition.y - speed * delta_t;
-      g_BoxOnGround = false;
+    } else {
+      boxBB = GetBoundingBoxObject("wcube_rdmobj00");
+      cubeModel =
+          Matrix_Translate(boxPosition.x, boxPosition.y, boxPosition.z) *
+          Matrix_Scale(0.05f, 0.05f, 0.05f);
+      boxBB = {cubeModel * boxBB.min, cubeModel * boxBB.max};
+
+      // Box physics
+      if (CheckCollisionAABBtoAABB(boxBB, g_MovingPlatform)) {
+        boxPosition = boxPosition + g_MovingPlatformDelta;
+        g_BoxOnMovingPlatform = true;
+        g_BoxOnGround = true;
+      } else {
+        g_BoxOnMovingPlatform = false;
+        g_BoxOnGround = false;
+      }
+
+      BoundingBox fixed_platform = GetBoundingBoxObject("platform");
+      glm::mat4 platform_trasform = Matrix_Translate(0.0f, 13.0f, 0.0f) *
+                                    Matrix_Scale(0.025f, 0.025f, 0.025f);
+      fixed_platform = {platform_trasform * fixed_platform.min,
+                        platform_trasform * fixed_platform.max};
+
+      boxBB.min.y = boxBB.min.y - 2.0f * delta_t;
+      g_BoxOnGround = CheckCollisionPlayerFloor(boxBB) ||
+                      CheckCollisionAABBtoAABB(boxBB, fixed_platform) ||
+                      g_BoxOnMovingPlatform;
+      if (!g_BoxOnGround && !g_BoxOnMovingPlatform) {
+        boxPosition.y = boxPosition.y - speed * delta_t;
+        g_BoxOnGround = false;
+      }
     }
 
-  }
+    if (g_EndGame) {
+      glClear(GL_DEPTH_BUFFER_BIT);
+      model = T_view * Matrix_Translate(-5.0, -5.0, -5.5) *
+              Matrix_Scale(10.0, 10.0, 1.0);
+      DrawObject(model, "cube", LEVEL_COMPLETE);
+    }
 
-  if(g_EndGame){
-    glClear(GL_DEPTH_BUFFER_BIT);
-    model = T_view * Matrix_Translate(-5.0, -5.0, -5.5) * Matrix_Scale(10.0, 10.0, 1.0);
-    DrawObject(model, "cube", LEVEL_COMPLETE);
-  }
+    TextRendering_ShowFramesPerSecond(window);
 
-  TextRendering_ShowFramesPerSecond(window);
+    glfwSwapBuffers(window);
 
-  glfwSwapBuffers(window);
-
-  glfwPollEvents();
+    glfwPollEvents();
   }
 
   glfwTerminate();
@@ -685,6 +685,7 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
+// Portal teleportation
 void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
                         int portal_color) {
   if (!isBluePortalActive || !isOrangePortalActive) {
@@ -703,13 +704,13 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
                 (portal.max.y + portal.min.y) / 2.0f,
                 (portal.max.z + portal.min.z) / 2.0f, 1.0f);
 
-  if(new_position.y < camera->y){
+  if (new_position.y < camera->y) {
     new_position.y = portal.max.y;
   }
 
   *camera = new_position + 2.0f * (portal_normal / norm(portal_normal));
-  // return new_position;
 
+  // Change player's orientation after leaving a portal
   if (portal_color == BLUE_PORTAL) {
     switch (bluePortalSeesDirection) {
       case NORTH:
@@ -748,6 +749,8 @@ void MovePlayerToPortal(glm::vec4* camera, glm::mat4 portal_transform,
     }
   }
 }
+
+// Drawing scene objects seen in the three cameras
 void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   glm::mat4 model = Matrix_Identity();
 
@@ -770,8 +773,8 @@ void sceneObjects(glm::mat4 view, glm::mat4 projection, glm::mat4 T_view) {
   DrawObject(model, "platform", PLATFORM);
 
   // Button
-  model =
-      Matrix_Translate(-20.0f, 0.35f, 25.0f) * Matrix_Scale(0.035f, 0.035f, 0.035f);
+  model = Matrix_Translate(-20.0f, 0.35f, 25.0f) *
+          Matrix_Scale(0.035f, 0.035f, 0.035f);
 
   DrawObject(model, "button", BUTTON);
 
@@ -868,6 +871,7 @@ void DrawObject(glm::mat4 model, const char* name, int id) {
   DrawVirtualObject(name);
 }
 
+// Change portal position after shooting the portal gun
 void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
                           int portal_color) {
   float normal_x = surface_normal.x;
@@ -880,6 +884,7 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
 
   const float delta_wall = 0.05;
 
+  // Check if the z or x normals are positive or negative to define the orientation of the portal
   if (normal_z > 1e-6f) {
     if (portal_color == BLUE_PORTAL) {
       bluePortalRotation = Matrix_Identity();
@@ -969,6 +974,7 @@ void UpdatePortalPosition(glm::vec4 colision_point, glm::vec4 surface_normal,
   }
 }
 
+// Calculate the point t of a Bézier curve
 glm::vec4 interpolate(float t, glm::vec4 point_a, glm::vec4 point_b) {
   return point_a + t * (point_b - point_a);
 }

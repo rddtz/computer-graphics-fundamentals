@@ -155,9 +155,7 @@ void main()
         V = texcoords.y;
     }
 
-    // Obtemos a refletância difusa a partir da leitura da imagem DoorTexture
     vec3 KdDoor = texture(DoorTexture, vec2(U,V)).rgb;
-    // e da imagem TextureImage1
     vec3 KdButton = texture(ButtonTexture, vec2(U,V)).rgb;
 
     vec3 KdLabWall = texture(LabWallTexture, vec2(U,V)).rgb;
@@ -227,12 +225,15 @@ void main()
     } else if(object_id == ORANGE_PORTAL){
         color.rgb = KdOP * 0.5 + vec3(0.996, 0.318, 0.027) * 0.5; 
         calcIllumination = false; 
+
     } else if(object_id == BLUE_PORTAL){
         color.rgb = KdBP * 0.5 + vec3(0.325, 0.745, 0.937) * 0.5; 
         calcIllumination = false;
+        
     } else if (object_id == WALL){
         Kd = KdLabWall;
         Ka = Kd;
+        
     } else if (object_id == FLOOR){
         color.rgb = KdLabWall;
         calcIllumination = false;
