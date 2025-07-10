@@ -18,6 +18,12 @@ Here is a breef explanation of where we used the computer graphics concepts lear
 ### How to play?
 The game has an easy and simple mechanic, the player must grab the box that lies in the highest platform and place it in the button in order to open the door and conclude the phase. The player can place portals in the walls in order to easily move around the map and achieve the goal. The following table describes the game commands:
 
+![image](https://github.com/user-attachments/assets/350ade6d-9868-470e-969d-529635cee655)
+
+![image](https://github.com/user-attachments/assets/243f78ab-2d9b-44cb-b586-dd080534629b)
+
+![image](https://github.com/user-attachments/assets/2bd18f64-f980-43e3-8670-296bf07ca171)
+
 | Key | Action |
 | ----------- | ----------- |
 | AWSD | Move the player |
